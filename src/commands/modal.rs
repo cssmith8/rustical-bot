@@ -3,7 +3,7 @@ use poise::Modal;
 
 #[derive(Debug, Modal)]
 #[name = "Epic Eggs"] // Struct name by default
-struct MyModal {
+pub struct MyModal {
     #[name = "Thing 1"] // Field name by default
     #[placeholder = "1"] // No placeholder by default
     #[min_length = 5] // No length restriction by default (so, 1-4000 chars)

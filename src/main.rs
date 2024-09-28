@@ -10,9 +10,12 @@ use serenity::{
     Client,
 };
 use std::env;
+use types::AppContext;
+use utils::paginate_cool::paginate_cool;
 
 mod commands;
 mod types;
+mod utils;
 
 #[derive(Debug, serde::Deserialize)]
 struct Record {
@@ -52,6 +55,26 @@ pub async fn paginate(ctx: Context<'_>) -> Result<(), Error> {
     println!("{:?}", lines);
 
     poise::samples::paginate(ctx, pages).await?;
+
+    Ok(())
+}
+
+#[poise::command(slash_command)]
+pub async fn paginatecool(ctx: AppContext<'_>) -> Result<(), Error> {
+    let pages = &[
+        "Content of first page",
+        "Content of second page",
+        "Content of third page",
+        "Content of fourth page",
+    ];
+
+    //red csv file at ../data/cool.csv
+    let csv = std::fs::read_to_string("./data/cool.csv").expect("Could not read file");
+    //create a list of all lines of csv file
+    let lines: Vec<&str> = csv.lines().collect();
+    println!("{:?}", lines);
+
+    paginate_cool(ctx, pages).await?;
 
     Ok(())
 }
@@ -151,7 +174,13 @@ async fn main() {
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![age(), commands::modal::modal(), paginate(), say()],
+            commands: vec![
+                age(),
+                commands::modal::modal(),
+                paginate(),
+                say(),
+                paginatecool(),
+            ],
             event_handler: |ctx, event, framework, data| {
                 Box::pin(event_handler(ctx, event, framework, data))
             },
