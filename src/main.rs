@@ -156,7 +156,7 @@ async fn main() {
     let token = env::var("DISCORD_TOKEN").expect("Expected discord token env");
 
     let db = PickleDb::load(
-        "real.db",
+        "data/real.db",
         PickleDbDumpPolicy::AutoDump,
         SerializationMethod::Json,
     );
