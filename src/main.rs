@@ -1,38 +1,22 @@
-use csv::{Reader, StringRecord, Writer};
+//use csv::{Reader, StringRecord, Writer};
+use crate::types::{Context, Data, Error};
 use pickledb::{PickleDb, PickleDbDumpPolicy, SerializationMethod};
 use poise::serenity_prelude as serenity;
 use poise::Modal;
 use serenity::model::id::ChannelId;
 use serenity::prelude::*;
 use serenity::{
-    model::prelude::{Message, Ready},
+    //model::prelude::{Message, Ready},
     Client,
 };
-use std::{env, io::Write};
+use std::env;
 
-struct Data {
-    db: Mutex<PickleDb>,
-} // User data, which is stored and accessible in all command invocations
-type Error = Box<dyn std::error::Error + Send + Sync>;
-type Context<'a> = poise::Context<'a, Data, Error>;
-type AppContext<'a> = poise::ApplicationContext<'a, Data, Error>;
+mod commands;
+mod types;
 
 #[derive(Debug, serde::Deserialize)]
 struct Record {
     name: String,
-}
-
-#[derive(Debug, Modal)]
-#[name = "Epic Eggs"] // Struct name by default
-struct MyModal {
-    #[name = "First input label"] // Field name by default
-    #[placeholder = "Your first input goes here"] // No placeholder by default
-    #[min_length = 5] // No length restriction by default (so, 1-4000 chars)
-    #[max_length = 500]
-    first_input: String,
-    #[name = "Second input label"]
-    #[paragraph] // Switches from single-line input to multiline text box
-    second_input: Option<String>, // Option means optional input
 }
 
 #[poise::command(slash_command, prefix_command)]
@@ -49,21 +33,6 @@ async fn age(
 #[poise::command(slash_command, prefix_command)]
 async fn say(ctx: Context<'_>, message: String) -> Result<(), Error> {
     ctx.say(message).await?;
-    Ok(())
-}
-
-#[poise::command(slash_command)]
-pub async fn modal(ctx: AppContext<'_>) -> Result<(), Error> {
-    let data = MyModal::execute(ctx).await?;
-    println!("Got data: {:?}", data);
-    //use the data here
-    match data {
-        Some(data) => {
-            // handle data
-            data.first_input;
-        }
-        None => return Ok(()),
-    }
     Ok(())
 }
 
@@ -85,6 +54,21 @@ pub async fn paginate(ctx: Context<'_>) -> Result<(), Error> {
     poise::samples::paginate(ctx, pages).await?;
 
     Ok(())
+}
+
+//modal
+#[derive(Debug, Modal)]
+#[name = "New Option"]
+struct OptionModal {
+    #[name = "Stock Ticker"]
+    #[placeholder = "AMZN"]
+    ticker: String,
+    #[name = "Strike Price"]
+    #[placeholder = "180.00"]
+    strike: String,
+    #[name = "Expiration Date"]
+    #[placeholder = "2022-01-01"]
+    exp: String,
 }
 
 //send a message in channel c
@@ -167,7 +151,7 @@ async fn main() {
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![age(), modal(), paginate(), say()],
+            commands: vec![age(), commands::modal::modal(), paginate(), say()],
             event_handler: |ctx, event, framework, data| {
                 Box::pin(event_handler(ctx, event, framework, data))
             },
