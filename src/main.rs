@@ -46,6 +46,12 @@ async fn age(
     Ok(())
 }
 
+#[poise::command(slash_command, prefix_command)]
+async fn say(ctx: Context<'_>, message: String) -> Result<(), Error> {
+    ctx.say(message).await?;
+    Ok(())
+}
+
 #[poise::command(slash_command)]
 pub async fn modal(ctx: AppContext<'_>) -> Result<(), Error> {
     let data = MyModal::execute(ctx).await?;
@@ -81,6 +87,42 @@ pub async fn paginate(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
+//send a message in channel c
+async fn rustical_message(ctx: &serenity::Context, data: &Data, c: ChannelId) -> Result<(), Error> {
+    let mut db = data.db.lock().await;
+
+    let index: i32 = db.get::<i32>("line").unwrap_or_default();
+    db.set("line", &(index + 1)).unwrap();
+
+    let mut rdr = csv::Reader::from_path("./data/cool.csv")?;
+    let mut results: Vec<Record> = vec![];
+    for result in rdr.deserialize::<Record>() {
+        // Notice that we need to provide a type hint for automatic
+        // deserialization.
+        match result {
+            Ok(rec) => results.push(rec),
+            Err(err) => {
+                println!("ERORR PARSING: {}", err.to_string())
+            }
+        }
+    }
+
+    let message = match results.get((index % (results.len() as i32)) as usize) {
+        Some(res) => res.name.clone(),
+        None => "Couldn't get one lol".to_string(),
+    };
+
+    let channel = c;
+    let channel = channel
+        .to_channel(&ctx.http)
+        .await
+        .expect("this channel will always work");
+    if let Some(channel) = channel.guild() {
+        channel.say(&ctx.http, message + " :money_mouth:").await?;
+    }
+    Ok(())
+}
+
 async fn event_handler(
     ctx: &serenity::Context,
     event: &serenity::FullEvent,
@@ -90,54 +132,17 @@ async fn event_handler(
     match event {
         serenity::FullEvent::Ready { data_about_bot, .. } => {
             println!("Logged in as {}", data_about_bot.user.tag());
-
-            // guild 1120455139954786324
-            // message hi in channel 1120455140416172115
-            let mut db = data.db.lock().await;
-
-            let index: i32 = db.get::<i32>("line").unwrap_or_default();
-            db.set("line", &(index + 1)).unwrap();
-
-            let mut rdr = csv::Reader::from_path("./data/cool.csv")?;
-            let mut results: Vec<Record> = vec![];
-            for result in rdr.deserialize::<Record>() {
-                // Notice that we need to provide a type hint for automatic
-                // deserialization.
-                match result {
-                    Ok(rec) => results.push(rec),
-                    Err(err) => {
-                        println!("ERORR PARSING: {}", err.to_string())
-                    }
-                }
-            }
-
-            let message = match results.get((index % (results.len() as i32)) as usize) {
-                Some(res) => res.name.clone(),
-                None => "Couldn't get one lol".to_string(),
-            };
-
-            let channel = ChannelId::new(1160065321013620857);
-            let channel = channel
-                .to_channel(&ctx.http)
-                .await
-                .expect("this channel will always work");
-            if let Some(channel) = channel.guild() {
-                channel.say(&ctx.http, message + " :money_mouth:").await?;
-            }
+            rustical_message(ctx, data, ChannelId::new(1160065321013620857)).await?;
         }
         // me when the
         serenity::FullEvent::Message { new_message } => {
             if new_message.author.bot {
                 return Ok(());
             }
-            if !new_message.mentions_me(&ctx).await.unwrap() {
-                return Ok(());
+            //not case sensitive
+            if new_message.content.eq_ignore_ascii_case("rustical bot") {
+                rustical_message(ctx, data, new_message.channel_id).await?;
             }
-
-            new_message
-                .reply(&ctx.http, "awesome sauce")
-                .await
-                .expect("Could not send message");
         }
         _ => {}
     };
@@ -162,7 +167,7 @@ async fn main() {
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![age(), modal(), paginate()],
+            commands: vec![age(), modal(), paginate(), say()],
             event_handler: |ctx, event, framework, data| {
                 Box::pin(event_handler(ctx, event, framework, data))
             },
