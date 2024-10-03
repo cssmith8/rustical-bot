@@ -32,8 +32,7 @@ struct Matchup {
     id15: f32,
 }
 
-#[poise::command(slash_command)]
-pub async fn matchup(ctx: AppContext<'_>, id1: i8, id2: i8) -> Result<(), Error> {
+pub async fn get_matchup(id1: i8, id2: i8) -> Result<f32, Error> {
     let mut rdr = csv::Reader::from_path("./data/stars/brawlers.csv")?;
     let mut brawlersRaw: Vec<BrawlerRaw> = vec![];
     for result in rdr.deserialize::<BrawlerRaw>() {
@@ -55,14 +54,14 @@ pub async fn matchup(ctx: AppContext<'_>, id1: i8, id2: i8) -> Result<(), Error>
 
     if id1 == id2 {
         //if the ids are equal, respond with -1
-        ctx.say("-1").await?;
-        return Ok(());
+        //ctx.say("-1").await?;
+        return Ok(-1.0);
     } else if id1 < 0 || id1 >= brawlersRaw.len() as i8 || id2 < 0 || id2 >= brawlersRaw.len() as i8
     {
         //if the ids are out of bounds, respond
         //println!("Invalid IDs: {} {}", id1, id2);
-        ctx.say("Invalid IDs").await?;
-        return Ok(());
+        //ctx.say("Invalid IDs").await?;
+        return Ok(-2.0);
     } else if id1 < id2 {
         //if the ids are in the wrong order, swap them
         firstid = id2;
@@ -115,13 +114,42 @@ pub async fn matchup(ctx: AppContext<'_>, id1: i8, id2: i8) -> Result<(), Error>
 
     let mut message: f32 = match brawlers.get(firstid as usize) {
         Some(res) => res.matchups.get(secondid as usize).unwrap().clone(),
-        None => "-1".parse().unwrap(),
+        None => "-3".parse().unwrap(),
     };
-    if invert && message != -1.0 {
+    if invert && message > 0.0 {
         message = 1.0 - message;
     }
-    //respond with the number of brawlers
-    ctx.say(format!("{}", message)).await?;
+    return Ok(message);
+}
 
+
+//get team matchup
+pub async fn get_team_matchup(blue: Vec<i8>, red: Vec<i8>) -> Result<f32, Error> {
+    let mut total = 0.0;
+    //for each brawler on the blue team
+    for i in 0..blue.len() {
+        //for each brawler on the red team
+        for j in 0..red.len() {
+            //get the matchup between the two brawlers
+            let matchup = get_matchup(blue[i], red[j]).await?;
+            //add the matchup to the total
+            total += matchup;
+            total -= 0.5;
+        }
+    }
+    return Ok(total);
+}
+
+
+#[poise::command(slash_command)]
+pub async fn matchup(ctx: AppContext<'_>, id1: i8, id2: i8) -> Result<(), Error> {
+    let message = get_matchup(id1, id2).await?;
+    //respond with the number of brawlers
+    match message {
+        -1.0 => ctx.say("Error: Same Brawler").await?,
+        -2.0 => ctx.say("Error: Invalid Brawler").await?,
+        -3.0 => ctx.say("Error: Parsing Error").await?,
+        _ => ctx.say(format!("{}", message)).await?,
+    };
     Ok(())
 }
