@@ -177,6 +177,7 @@ async fn main() {
             commands: vec![
                 age(),
                 commands::modal::modal(),
+                commands::stars::matchup::matchup(),
                 paginate(),
                 say(),
                 paginatecool(),
