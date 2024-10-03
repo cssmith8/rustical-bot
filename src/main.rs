@@ -9,6 +9,7 @@ use serenity::{
     //model::prelude::{Message, Ready},
     Client,
 };
+use std::arch::x86_64::_MM_FROUND_TO_NEAREST_INT;
 use std::env;
 use types::AppContext;
 use utils::paginate_cool::paginate_cool;
@@ -95,7 +96,7 @@ struct OptionModal {
 }
 
 //send a message in channel c
-async fn rustical_message(ctx: &serenity::Context, data: &Data, c: ChannelId) -> Result<(), Error> {
+async fn rustical_message(ctx: &serenity::Context, data: &Data, c: ChannelId, laptop: String) -> Result<(), Error> {
     let mut db = data.db.lock().await;
 
     let index: i32 = db.get::<i32>("line").unwrap_or_default();
@@ -119,13 +120,22 @@ async fn rustical_message(ctx: &serenity::Context, data: &Data, c: ChannelId) ->
         None => "Couldn't get one lol".to_string(),
     };
 
+    let l: String = match laptop.parse().unwrap() {
+        1 => {
+            " Laptopically".to_string()
+        }
+        _ => {
+            "".to_string()
+    }
+    };
+
     let channel = c;
     let channel = channel
         .to_channel(&ctx.http)
         .await
         .expect("this channel will always work");
     if let Some(channel) = channel.guild() {
-        channel.say(&ctx.http, message + " :money_mouth:").await?;
+        channel.say(&ctx.http, message + &l + " :money_mouth:").await?;
     }
     Ok(())
 }
@@ -139,7 +149,7 @@ async fn event_handler(
     match event {
         serenity::FullEvent::Ready { data_about_bot, .. } => {
             println!("Logged in as {}", data_about_bot.user.tag());
-            rustical_message(ctx, data, ChannelId::new(1160065321013620857)).await?;
+            rustical_message(ctx, data, ChannelId::new(1160065321013620857), env::var("LAPTOP").expect("0")).await?;
         }
         // me when the
         serenity::FullEvent::Message { new_message } => {
@@ -148,7 +158,7 @@ async fn event_handler(
             }
             //not case sensitive
             if new_message.content.eq_ignore_ascii_case("rustical bot") {
-                rustical_message(ctx, data, new_message.channel_id).await?;
+                rustical_message(ctx, data, new_message.channel_id, "0".to_string()).await?;
             }
         }
         _ => {}
