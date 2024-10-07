@@ -9,7 +9,8 @@ use serenity::{
     //model::prelude::{Message, Ready},
     Client,
 };
-use std::arch::x86_64::_MM_FROUND_TO_NEAREST_INT;
+
+use core::panic;
 use std::env;
 use types::AppContext;
 use utils::paginate_cool::paginate_cool;
@@ -140,6 +141,11 @@ async fn rustical_message(ctx: &serenity::Context, data: &Data, c: ChannelId, la
     Ok(())
 }
 
+#[derive(serde::Serialize, serde::Deserialize)]
+struct AmazingThing {
+    real: String,
+    fake: f32
+}
 async fn event_handler(
     ctx: &serenity::Context,
     event: &serenity::FullEvent,
@@ -149,7 +155,34 @@ async fn event_handler(
     match event {
         serenity::FullEvent::Ready { data_about_bot, .. } => {
             println!("Logged in as {}", data_about_bot.user.tag());
-            rustical_message(ctx, data, ChannelId::new(1160065321013620857), env::var("LAPTOP").expect("0")).await?;
+            //rustical_message(ctx, data, ChannelId::new(1160065321013620857), env::var("LAPTOP").expect("0")).await?;
+
+            let mut testdb = match PickleDb::load(
+                "data/test.db",
+                PickleDbDumpPolicy::AutoDump,
+                SerializationMethod::Json,
+            ) {
+                Ok(testdb) => testdb,
+                Err(e) => {
+                    println!("Could not load db: {}, creating new one", e.to_string());
+                    PickleDb::new(
+                        "data/test.db",
+                        PickleDbDumpPolicy::AutoDump,
+                        SerializationMethod::Json,
+                    )
+                }
+            };
+
+            let real_thing = AmazingThing {
+                real: "real".to_string(),
+                fake: 0.0
+            };
+            testdb.set("real", &real_thing).unwrap();
+
+            let index = testdb.get::<AmazingThing>("real").unwrap();
+
+            println!("Real: {}, Fake: {}", index.real, index.fake);
+
         }
         // me when the
         serenity::FullEvent::Message { new_message } => {
