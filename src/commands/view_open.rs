@@ -1,7 +1,7 @@
-use crate::{commands::modal::MyModal, types::AppContext};
-use poise::{serenity_prelude as serenity, Modal};
+use crate::types::AppContext;
+use poise::serenity_prelude as serenity;
 
-pub async fn paginate_cool(ctx: AppContext<'_>, pages: &[&str]) -> Result<(), serenity::Error> {
+pub async fn view_open(ctx: AppContext<'_>, pages: &[&str]) -> Result<(), serenity::Error> {
     // Define some unique identifiers for the navigation buttons
     let ctx_id = ctx.id();
     let prev_button_id = format!("{}prev", ctx_id);

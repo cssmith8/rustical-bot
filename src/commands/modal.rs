@@ -17,6 +17,7 @@ pub struct MyModal {
 
 #[poise::command(slash_command)]
 pub async fn modal(ctx: AppContext<'_>) -> Result<(), Error> {
+    //get the user id
     let data = MyModal::execute(ctx).await?;
     println!("Got data: {:?}", data);
     //use the data here

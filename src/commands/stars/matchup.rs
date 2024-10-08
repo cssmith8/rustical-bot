@@ -34,12 +34,12 @@ struct Matchup {
 
 pub async fn get_matchup(id1: i8, id2: i8) -> Result<f32, Error> {
     let mut rdr = csv::Reader::from_path("./data/stars/brawlers.csv")?;
-    let mut brawlersRaw: Vec<BrawlerRaw> = vec![];
+    let mut brawlers_raw: Vec<BrawlerRaw> = vec![];
     for result in rdr.deserialize::<BrawlerRaw>() {
         // Notice that we need to provide a type hint for automatic
         // deserialization.
         match result {
-            Ok(rec) => brawlersRaw.push(rec),
+            Ok(rec) => brawlers_raw.push(rec),
             Err(err) => {
                 println!("ERORR PARSING: {}", err.to_string())
             }
@@ -56,7 +56,10 @@ pub async fn get_matchup(id1: i8, id2: i8) -> Result<f32, Error> {
         //if the ids are equal, respond with -1
         //ctx.say("-1").await?;
         return Ok(-1.0);
-    } else if id1 < 0 || id1 >= brawlersRaw.len() as i8 || id2 < 0 || id2 >= brawlersRaw.len() as i8
+    } else if id1 < 0
+        || id1 >= brawlers_raw.len() as i8
+        || id2 < 0
+        || id2 >= brawlers_raw.len() as i8
     {
         //if the ids are out of bounds, respond
         //println!("Invalid IDs: {} {}", id1, id2);
@@ -98,7 +101,7 @@ pub async fn get_matchup(id1: i8, id2: i8) -> Result<f32, Error> {
                 //store the vector in brawler
                 brawlers.push(Brawler {
                     id: (matchups.len() - 1) as i8,
-                    name: brawlersRaw
+                    name: brawlers_raw
                         .get(matchups.len() - 1 as i8 as usize)
                         .unwrap()
                         .name
@@ -122,7 +125,6 @@ pub async fn get_matchup(id1: i8, id2: i8) -> Result<f32, Error> {
     return Ok(message);
 }
 
-
 //get team matchup
 pub async fn get_team_matchup(blue: Vec<i8>, red: Vec<i8>) -> Result<f32, Error> {
     let mut total = 0.0;
@@ -139,7 +141,6 @@ pub async fn get_team_matchup(blue: Vec<i8>, red: Vec<i8>) -> Result<f32, Error>
     }
     return Ok(total);
 }
-
 
 #[poise::command(slash_command)]
 pub async fn matchup(ctx: AppContext<'_>, id1: i8, id2: i8) -> Result<(), Error> {

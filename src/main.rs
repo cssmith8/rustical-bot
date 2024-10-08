@@ -81,7 +81,22 @@ pub async fn paginatecool(ctx: AppContext<'_>) -> Result<(), Error> {
     Ok(())
 }
 
+#[poise::command(slash_command)]
+pub async fn view(ctx: AppContext<'_>) -> Result<(), Error> {
+    let pages = &[
+        "Content of first page",
+        "Content of second page",
+        "Content of third page",
+        "Content of fourth page",
+    ];
+
+    paginate_cool(ctx, pages).await?;
+
+    Ok(())
+}
+
 //modal
+/*
 #[derive(Debug, Modal)]
 #[name = "New Option"]
 struct OptionModal {
@@ -95,9 +110,15 @@ struct OptionModal {
     #[placeholder = "2022-01-01"]
     exp: String,
 }
+*/
 
 //send a message in channel c
-async fn rustical_message(ctx: &serenity::Context, data: &Data, c: ChannelId, laptop: String) -> Result<(), Error> {
+async fn rustical_message(
+    ctx: &serenity::Context,
+    data: &Data,
+    c: ChannelId,
+    laptop: String,
+) -> Result<(), Error> {
     let mut db = data.db.lock().await;
 
     let index: i32 = db.get::<i32>("line").unwrap_or_default();
@@ -122,12 +143,8 @@ async fn rustical_message(ctx: &serenity::Context, data: &Data, c: ChannelId, la
     };
 
     let l: String = match laptop.parse().unwrap() {
-        1 => {
-            " Laptopically".to_string()
-        }
-        _ => {
-            "".to_string()
-    }
+        1 => " Laptopically".to_string(),
+        _ => "".to_string(),
     };
 
     let channel = c;
@@ -136,7 +153,9 @@ async fn rustical_message(ctx: &serenity::Context, data: &Data, c: ChannelId, la
         .await
         .expect("this channel will always work");
     if let Some(channel) = channel.guild() {
-        channel.say(&ctx.http, message + &l + " :money_mouth:").await?;
+        channel
+            .say(&ctx.http, message + &l + " :money_mouth:")
+            .await?;
     }
     Ok(())
 }
@@ -144,7 +163,7 @@ async fn rustical_message(ctx: &serenity::Context, data: &Data, c: ChannelId, la
 #[derive(serde::Serialize, serde::Deserialize)]
 struct AmazingThing {
     real: String,
-    fake: f32
+    fake: f32,
 }
 async fn event_handler(
     ctx: &serenity::Context,
@@ -175,14 +194,12 @@ async fn event_handler(
 
             let real_thing = AmazingThing {
                 real: "real".to_string(),
-                fake: 0.0
+                fake: 0.0,
             };
             testdb.set("real", &real_thing).unwrap();
 
             let index = testdb.get::<AmazingThing>("real").unwrap();
-
-            println!("Real: {}, Fake: {}", index.real, index.fake);
-
+            //println!("Real: {}, Fake: {}", index.real, index.fake);
         }
         // me when the
         serenity::FullEvent::Message { new_message } => {
@@ -224,6 +241,7 @@ async fn main() {
                 paginate(),
                 say(),
                 paginatecool(),
+                commands::add_option_data::open(),
             ],
             event_handler: |ctx, event, framework, data| {
                 Box::pin(event_handler(ctx, event, framework, data))
