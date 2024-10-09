@@ -1,3 +1,4 @@
+use crate::commands::option_settings::get_setting;
 use crate::types::{AppContext, Error};
 use crate::types::{OptionAssignment, OptionClose, OptionOpen};
 use chrono::prelude::*;
@@ -128,6 +129,40 @@ pub async fn add_open(
     opendb.set("end_id", &(end_id + 1)).unwrap();
 
     return Ok(0);
+}
+
+#[derive(Debug, Modal)]
+#[name = "Close Contract"] // Struct name by default
+pub struct CloseModal {
+    #[name = "Price"]
+    #[placeholder = "0.10"]
+    premium: String,
+    //#[name = "Quantity"]
+    //#[placeholder = "1"]
+    //quantity: String,
+}
+
+#[poise::command(slash_command)]
+pub async fn close(ctx: AppContext<'_>) -> Result<(), Error> {
+    let userid = ctx.interaction.user.id;
+    let edit_id = get_setting(userid, "edit_id".to_string()).await?;
+    let data = CloseModal::execute(ctx).await?;
+    //println!("Got data: {:?}", data);
+    match data {
+        Some(data) => {
+            //get current date
+            let date = Local::now();
+            //parse the premium
+            let premium = data.premium.parse::<f64>().unwrap();
+            //parse the quantity
+            //let quantity = data.quantity.parse::<u16>().unwrap();
+            //add the close contract to the database
+            add_close(userid, date, "close".to_string(), 0, 0, premium, 0).await?;
+            ctx.say("real").await?;
+        }
+        None => return Ok(()),
+    }
+    Ok(())
 }
 
 pub async fn add_close(
