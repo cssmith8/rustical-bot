@@ -12,7 +12,7 @@ pub async fn view_open(ctx: AppContext<'_>, pages: &[&str]) -> Result<(), sereni
     let reply = {
         let components = serenity::CreateActionRow::Buttons(vec![
             serenity::CreateButton::new(&prev_button_id).emoji('◀'),
-            serenity::CreateButton::new(&middle_button_id).emoji('🐂'),
+            serenity::CreateButton::new(&middle_button_id).label("Close"),
             serenity::CreateButton::new(&next_button_id).emoji('▶'),
         ]);
 
