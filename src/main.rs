@@ -70,12 +70,6 @@ pub async fn paginatecool(ctx: AppContext<'_>) -> Result<(), Error> {
         "Content of fourth page",
     ];
 
-    //red csv file at ../data/cool.csv
-    let csv = std::fs::read_to_string("./data/cool.csv").expect("Could not read file");
-    //create a list of all lines of csv file
-    let lines: Vec<&str> = csv.lines().collect();
-    println!("{:?}", lines);
-
     paginate_cool(ctx, pages).await?;
 
     Ok(())
@@ -174,7 +168,13 @@ async fn event_handler(
     match event {
         serenity::FullEvent::Ready { data_about_bot, .. } => {
             println!("Logged in as {}", data_about_bot.user.tag());
-            //rustical_message(ctx, data, ChannelId::new(1160065321013620857), env::var("LAPTOP").expect("0")).await?;
+            rustical_message(
+                ctx,
+                data,
+                ChannelId::new(1160065321013620857),
+                env::var("LAPTOP").expect("0"),
+            )
+            .await?;
 
             let mut testdb = match PickleDb::load(
                 "data/test.db",

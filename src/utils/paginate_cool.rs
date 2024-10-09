@@ -1,6 +1,6 @@
 use crate::{commands::modal::MyModal, types::AppContext};
 use poise::{
-    serenity_prelude::{self as serenity, CreateQuickModal},
+    serenity_prelude::{self as serenity, CreateInteractionResponseMessage, CreateQuickModal},
     Modal,
 };
 
@@ -46,9 +46,12 @@ pub async fn paginate_cool(ctx: AppContext<'_>, pages: &[&str]) -> Result<(), se
             current_page = current_page.checked_sub(1).unwrap_or(pages.len() - 1);
         } else if press.data.custom_id == middle_button_id {
             ctx.say(format!(":ox: {}", current_page)).await?;
-            //press
-            //    .quick_modal(press., CreateQuickModal::new("test").short_field("tet"))
-            //    .await?;
+            let data = press
+                .quick_modal(
+                    ctx.clone().serenity_context(),
+                    CreateQuickModal::new("test").short_field("tet"),
+                )
+                .await?;
         } else {
             // This is an unrelated button interaction
             continue;
