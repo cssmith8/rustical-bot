@@ -28,7 +28,7 @@ pub struct OptionClose {
     pub date: DateTime<Local>,
     pub close_type: String,
     pub open_id: u32,
-    pub roll_id: u32,
+    pub roll_id: i32,
     pub premium: f64,
     pub quantity: u16,
 }

@@ -89,23 +89,6 @@ pub async fn view(ctx: AppContext<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-//modal
-/*
-#[derive(Debug, Modal)]
-#[name = "New Option"]
-struct OptionModal {
-    #[name = "Stock Ticker"]
-    #[placeholder = "AMZN"]
-    ticker: String,
-    #[name = "Strike Price"]
-    #[placeholder = "180.00"]
-    strike: String,
-    #[name = "Expiration Date"]
-    #[placeholder = "2022-01-01"]
-    exp: String,
-}
-*/
-
 //send a message in channel c
 async fn rustical_message(
     ctx: &serenity::Context,
@@ -242,6 +225,7 @@ async fn main() {
                 say(),
                 paginatecool(),
                 commands::add_option_data::open(),
+                commands::add_option_data::close(),
             ],
             event_handler: |ctx, event, framework, data| {
                 Box::pin(event_handler(ctx, event, framework, data))

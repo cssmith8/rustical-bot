@@ -51,8 +51,10 @@ pub async fn get_setting(userid: id::UserId, key: String) -> Result<String, Erro
         }
     };
     if new_flag {
-        db.set("commission", &0.65).unwrap();
-        db.set("edit_id", &-1).unwrap();
+        db.set("commission", &"0.65").unwrap();
+        db.set("edit_id", &"-1").unwrap();
     }
+    println!("Key: {}", key);
+    println!("Value: {:?}", db.get::<String>(key.as_str()));
     Ok(db.get(key.as_str()).unwrap())
 }

@@ -74,7 +74,8 @@ pub async fn open(ctx: AppContext<'_>) -> Result<(), Error> {
                 close_id,
             )
             .await?;
-            ctx.say("real").await?;
+            ctx.say("Contract Opened").await?;
+
         }
         None => return Ok(()),
     }
@@ -128,7 +129,7 @@ pub async fn add_open(
     opendb.set(end_id.to_string().as_str(), &new_open).unwrap();
     opendb.set("end_id", &(end_id + 1)).unwrap();
 
-    return Ok(0);
+    return Ok(end_id);
 }
 
 #[derive(Debug, Modal)]
@@ -145,9 +146,27 @@ pub struct CloseModal {
 #[poise::command(slash_command)]
 pub async fn close(ctx: AppContext<'_>) -> Result<(), Error> {
     let userid = ctx.interaction.user.id;
+
     let edit_id = get_setting(userid, "edit_id".to_string()).await?;
+    if edit_id == "-1" {
+        ctx.say("No open contract selected").await?;
+        return Ok(());
+    }
+    let db_location = format!("data/{}_open.db", userid.to_string());
+    let mut opendb = match PickleDb::load(
+        db_location.clone(),
+        PickleDbDumpPolicy::AutoDump,
+        SerializationMethod::Json,
+    ) {
+        Ok(opendb) => opendb,
+        Err(e) => {
+            ctx.say("Could not load db").await?;
+            return Err(Error::from(e.to_string()));
+        }
+    };
+    let mut open = opendb.get::<OptionOpen>(edit_id.as_str()).unwrap();
     let data = CloseModal::execute(ctx).await?;
-    //println!("Got data: {:?}", data);
+
     match data {
         Some(data) => {
             //get current date
@@ -156,9 +175,13 @@ pub async fn close(ctx: AppContext<'_>) -> Result<(), Error> {
             let premium = data.premium.parse::<f64>().unwrap();
             //parse the quantity
             //let quantity = data.quantity.parse::<u16>().unwrap();
+            let open_id = edit_id.parse::<u32>().unwrap();
             //add the close contract to the database
-            add_close(userid, date, "close".to_string(), 0, 0, premium, 0).await?;
-            ctx.say("real").await?;
+            let close_id = add_close(userid, date, "close".to_string(), open_id, -1, premium, 0).await?;
+            open.close_id = Some(close_id);
+            open.status = "closed".to_string();
+            opendb.set(edit_id.as_str(), &open).unwrap();
+            ctx.say("Contract Closed").await?;
         }
         None => return Ok(()),
     }
@@ -170,7 +193,7 @@ pub async fn add_close(
     date: DateTime<Local>,
     close_type: String,
     open_id: u32,
-    roll_id: u32,
+    roll_id: i32,
     premium: f64,
     quantity: u16,
 ) -> Result<u32, Error> {
@@ -210,7 +233,7 @@ pub async fn add_close(
         .unwrap();
     closedb.set("end_id", &(end_id + 1)).unwrap();
 
-    return Ok(0);
+    return Ok(end_id);
 }
 
 pub async fn add_assignment(
