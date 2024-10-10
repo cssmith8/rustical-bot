@@ -1,4 +1,4 @@
-use crate::commands::option_settings::get_setting;
+use crate::commands::option_settings::{get_setting, edit_settings};
 use crate::types::{AppContext, Error};
 use crate::types::{OptionAssignment, OptionClose, OptionOpen};
 use chrono::prelude::*;
@@ -149,7 +149,7 @@ pub async fn close(ctx: AppContext<'_>) -> Result<(), Error> {
 
     let edit_id = get_setting(userid, "edit_id".to_string()).await?;
     if edit_id == "-1" {
-        ctx.say("No open contract selected").await?;
+        ctx.say("No open position selected").await?;
         return Ok(());
     }
     let db_location = format!("data/{}_open.db", userid.to_string());
@@ -185,6 +185,7 @@ pub async fn close(ctx: AppContext<'_>) -> Result<(), Error> {
         }
         None => return Ok(()),
     }
+    edit_settings(userid, "edit_id".to_string(), "-1".to_string()).await?;
     Ok(())
 }
 

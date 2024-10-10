@@ -64,21 +64,7 @@ pub async fn paginate(ctx: Context<'_>) -> Result<(), Error> {
 #[poise::command(slash_command)]
 pub async fn paginatecool(ctx: AppContext<'_>) -> Result<(), Error> {
     let pages = &[
-        "Content of first page",
-        "Content of second page",
-        "Content of third page",
-        "Content of fourth page",
-    ];
-
-    paginate_cool(ctx, pages).await?;
-
-    Ok(())
-}
-
-#[poise::command(slash_command)]
-pub async fn view(ctx: AppContext<'_>) -> Result<(), Error> {
-    let pages = &[
-        "Content of first page",
+        "# Content of first page\n- real thing\n- fake thing",
         "Content of second page",
         "Content of third page",
         "Content of fourth page",
@@ -226,6 +212,7 @@ async fn main() {
                 paginatecool(),
                 commands::add_option_data::open(),
                 commands::add_option_data::close(),
+                commands::view_open::view(),
             ],
             event_handler: |ctx, event, framework, data| {
                 Box::pin(event_handler(ctx, event, framework, data))

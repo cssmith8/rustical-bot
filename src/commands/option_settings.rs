@@ -23,9 +23,11 @@ pub async fn edit_settings(userid: id::UserId, key: String, value: String) -> Re
         }
     };
     if new_flag {
-        db.set("commission", &0.65).unwrap();
-        db.set("edit_id", &-1).unwrap();
+        db.set("commission", &"0.65").unwrap();
+        db.set("edit_id", &"-1").unwrap();
     }
+    db.set(key.as_str(), &value).unwrap();
+    println!("Setting {} to {}", key, value);
     Ok(())
 }
 
