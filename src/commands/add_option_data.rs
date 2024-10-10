@@ -181,7 +181,13 @@ pub async fn close(ctx: AppContext<'_>) -> Result<(), Error> {
             open.close_id = Some(close_id);
             open.status = "closed".to_string();
             opendb.set(edit_id.as_str(), &open).unwrap();
-            ctx.say("Contract Closed").await?;
+            let gain: f64 = (open.premium - premium) * (open.quantity as f64) * 100 as f64;
+            let money_mouth = if gain > 0.0 {
+                ":money_mouth:"
+            } else {
+                ""
+            };
+            ctx.say(format!("Contract Closed. You made ${} {}", gain, money_mouth)).await?;
         }
         None => return Ok(()),
     }
