@@ -2,7 +2,6 @@
 use crate::types::{Context, Data, Error};
 use pickledb::{PickleDb, PickleDbDumpPolicy, SerializationMethod};
 use poise::serenity_prelude as serenity;
-use poise::Modal;
 use serenity::model::id::ChannelId;
 use serenity::prelude::*;
 use serenity::{
@@ -10,7 +9,6 @@ use serenity::{
     Client,
 };
 
-use core::panic;
 use std::env;
 use types::AppContext;
 use utils::paginate_cool::paginate_cool;
@@ -38,26 +36,6 @@ async fn age(
 #[poise::command(slash_command, prefix_command)]
 async fn say(ctx: Context<'_>, message: String) -> Result<(), Error> {
     ctx.say(message).await?;
-    Ok(())
-}
-
-#[poise::command(slash_command, prefix_command)]
-pub async fn paginate(ctx: Context<'_>) -> Result<(), Error> {
-    let pages = &[
-        "Content of first page",
-        "Content of second page",
-        "Content of third page",
-        "Content of fourth page",
-    ];
-
-    //red csv file at ../data/cool.csv
-    let csv = std::fs::read_to_string("./data/cool.csv").expect("Could not read file");
-    //create a list of all lines of csv file
-    let lines: Vec<&str> = csv.lines().collect();
-    println!("{:?}", lines);
-
-    poise::samples::paginate(ctx, pages).await?;
-
     Ok(())
 }
 
@@ -207,7 +185,6 @@ async fn main() {
                 age(),
                 commands::modal::modal(),
                 commands::stars::matchup::matchup(),
-                paginate(),
                 say(),
                 paginatecool(),
                 commands::add_option_data::open(),
