@@ -1,5 +1,5 @@
 use crate::types::{AppContext, Error};
-use crate::types::{OptionAssignment, OptionClose, OptionOpen};
+use crate::types::OptionOpen;
 use chrono::Datelike;
 use poise::serenity_prelude as serenity;
 use pickledb::{PickleDb, PickleDbDumpPolicy, SerializationMethod};
@@ -18,7 +18,7 @@ pub async fn view(ctx: AppContext<'_>) -> Result<(), Error> {
         SerializationMethod::Json,
     ) {
         Ok(opendb) => opendb,
-        Err(e) => {
+        Err(_e) => {
             ctx.say("No option history found").await?;
             return Ok(());
         }
@@ -111,7 +111,7 @@ pub async fn view_open(ctx: AppContext<'_>, pages: Vec<OptionOpen>) -> Result<()
 
 pub async fn stringify(index: u32, length: u32, option: &OptionOpen) -> String {
     let date: String = option.expiry.month().to_string() + "/" + &option.expiry.day().to_string() + "/" + &(option.expiry.year() % 100).to_string();
-    let mut string = format!(
+    let string = format!(
         "{}/{}\n# {} ${} {} Put\nPremium: ${}\nQuantity: {}\n",
         index + 1, length, option.ticker, option.strike, date, option.premium, option.quantity
     );

@@ -10,12 +10,9 @@ use serenity::{
 };
 
 use std::env;
-use types::AppContext;
-use utils::paginate_cool::paginate_cool;
 
 mod commands;
 mod types;
-mod utils;
 
 #[derive(Debug, serde::Deserialize)]
 struct Record {
@@ -36,20 +33,6 @@ async fn age(
 #[poise::command(slash_command, prefix_command)]
 async fn say(ctx: Context<'_>, message: String) -> Result<(), Error> {
     ctx.say(message).await?;
-    Ok(())
-}
-
-#[poise::command(slash_command)]
-pub async fn paginatecool(ctx: AppContext<'_>) -> Result<(), Error> {
-    let pages = &[
-        "# Content of first page\n- real thing\n- fake thing",
-        "Content of second page",
-        "Content of third page",
-        "Content of fourth page",
-    ];
-
-    paginate_cool(ctx, pages).await?;
-
     Ok(())
 }
 
@@ -122,31 +105,6 @@ async fn event_handler(
                 env::var("LAPTOP").expect("0"),
             )
             .await?;
-
-            let mut testdb = match PickleDb::load(
-                "data/test.db",
-                PickleDbDumpPolicy::AutoDump,
-                SerializationMethod::Json,
-            ) {
-                Ok(testdb) => testdb,
-                Err(e) => {
-                    println!("Could not load db: {}, creating new one", e.to_string());
-                    PickleDb::new(
-                        "data/test.db",
-                        PickleDbDumpPolicy::AutoDump,
-                        SerializationMethod::Json,
-                    )
-                }
-            };
-
-            let real_thing = AmazingThing {
-                real: "real".to_string(),
-                fake: 0.0,
-            };
-            testdb.set("real", &real_thing).unwrap();
-
-            let index = testdb.get::<AmazingThing>("real").unwrap();
-            //println!("Real: {}, Fake: {}", index.real, index.fake);
         }
         // me when the
         serenity::FullEvent::Message { new_message } => {
@@ -186,7 +144,6 @@ async fn main() {
                 commands::modal::modal(),
                 commands::stars::matchup::matchup(),
                 say(),
-                paginatecool(),
                 commands::add_option_data::open(),
                 commands::add_option_data::close(),
                 commands::view_open::view(),

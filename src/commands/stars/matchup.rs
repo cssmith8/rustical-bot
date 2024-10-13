@@ -2,13 +2,13 @@ use crate::types::{AppContext, Error};
 
 #[derive(Debug, serde::Deserialize)]
 struct BrawlerRaw {
-    id: i8,
-    name: String,
+    //id: i8,
+    //name: String,
 }
 
 struct Brawler {
-    id: i8,
-    name: String,
+    //id: i8,
+    //name: String,
     matchups: Vec<f32>,
 }
 
@@ -100,12 +100,12 @@ pub async fn get_matchup(id1: i8, id2: i8) -> Result<f32, Error> {
 
                 //store the vector in brawler
                 brawlers.push(Brawler {
-                    id: (matchups.len() - 1) as i8,
-                    name: brawlers_raw
-                        .get(matchups.len() - 1 as i8 as usize)
-                        .unwrap()
-                        .name
-                        .clone(),
+                    // id: (matchups.len() - 1) as i8,
+                    // name: brawlers_raw
+                    //     .get(matchups.len() - 1 as i8 as usize)
+                    //     .unwrap()
+                    //     .name
+                    //     .clone(),
                     matchups: matchup,
                 });
             }
@@ -152,5 +152,7 @@ pub async fn matchup(ctx: AppContext<'_>, id1: i8, id2: i8) -> Result<(), Error>
         -3.0 => ctx.say("Error: Parsing Error").await?,
         _ => ctx.say(format!("{}", message)).await?,
     };
+    //get_team_matchup with 2 empty vectors
+    get_team_matchup(vec![], vec![]).await?;
     Ok(())
 }

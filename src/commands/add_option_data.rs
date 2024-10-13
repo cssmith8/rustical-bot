@@ -1,6 +1,6 @@
 use crate::commands::option_settings::{get_setting, edit_settings};
 use crate::types::{AppContext, Error};
-use crate::types::{OptionAssignment, OptionClose, OptionOpen};
+use crate::types::{OptionClose, OptionOpen};
 use chrono::prelude::*;
 use pickledb::{PickleDb, PickleDbDumpPolicy, SerializationMethod};
 use poise::{serenity_prelude::model::id, Modal};
@@ -243,6 +243,7 @@ pub async fn add_close(
     return Ok(end_id);
 }
 
+/*
 pub async fn add_assignment(
     userid: id::UserId,
     date: DateTime<Local>,
@@ -288,3 +289,4 @@ pub async fn add_assignment(
 
     return Ok(0);
 }
+*/
