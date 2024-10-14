@@ -1,10 +1,12 @@
 use crate::types::{AppContext, Error};
 use crate::types::OptionOpen;
 use chrono::Datelike;
-use poise::serenity_prelude as serenity;
+use poise::serenity_prelude::{self as serenity, Colour};
 use pickledb::{PickleDb, PickleDbDumpPolicy, SerializationMethod};
 
 use super::option_settings::edit_settings;
+
+const SELECT_TEXT: &str = "**Position Selected**\n> Use `/close` to close the position\n> Use `/roll` to roll the position\n> Use `/expire` if the option expired\n> Use `/assign` if the option was assigned";
 
 #[poise::command(slash_command)]
 pub async fn view(ctx: AppContext<'_>) -> Result<(), Error> {
@@ -49,14 +51,14 @@ pub async fn view_open(ctx: AppContext<'_>, pages: Vec<OptionOpen>) -> Result<()
     // Define some unique identifiers for the navigation buttons
     let ctx_id = ctx.id();
     let prev_button_id = format!("{}prev", ctx_id);
-    let close_button_id = format!("{}close", ctx_id);
+    let select_button_id = format!("{}select", ctx_id);
     let next_button_id = format!("{}next", ctx_id);
 
     // Send the embed with the first page as content
     let reply = {
         let components = serenity::CreateActionRow::Buttons(vec![
             serenity::CreateButton::new(&prev_button_id).emoji('◀'),
-            serenity::CreateButton::new(&close_button_id).label("Close"),
+            serenity::CreateButton::new(&select_button_id).label("Select"),
             serenity::CreateButton::new(&next_button_id).emoji('▶'),
         ]);
 
@@ -85,10 +87,12 @@ pub async fn view_open(ctx: AppContext<'_>, pages: Vec<OptionOpen>) -> Result<()
             }
         } else if press.data.custom_id == prev_button_id {
             current_page = current_page.checked_sub(1).unwrap_or(pages.len() - 1);
-        } else if press.data.custom_id == close_button_id {
+        } else if press.data.custom_id == select_button_id {
             //MyModal::execute(ctx).await?;
             close_button(ctx, pages[current_page].id).await.unwrap();
-            ctx.say(format!("Position Selected, use /close")).await?;
+            //ctx.say(SELECT_TEXT).await?;
+            let reply = poise::CreateReply::default().embed(serenity::CreateEmbed::default().description(SELECT_TEXT).color(Colour::DARK_GREEN));
+            ctx.send(reply).await?;
         } else {
             // This is an unrelated button interaction
             continue;
@@ -112,8 +116,8 @@ pub async fn view_open(ctx: AppContext<'_>, pages: Vec<OptionOpen>) -> Result<()
 pub async fn stringify(index: u32, length: u32, option: &OptionOpen) -> String {
     let date: String = option.expiry.month().to_string() + "/" + &option.expiry.day().to_string() + "/" + &(option.expiry.year() % 100).to_string();
     let string = format!(
-        "{}/{}\n# {} ${} {} Put\nPremium: ${}\nQuantity: {}\n",
-        index + 1, length, option.ticker, option.strike, date, option.premium, option.quantity
+        "{}/{}\n# {} {} ${} Put\nPremium: ${}\nQuantity: {}\n",
+        index + 1, length, option.ticker, date, option.strike, option.premium, option.quantity
     );
     string
 }

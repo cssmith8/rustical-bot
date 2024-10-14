@@ -27,7 +27,7 @@ pub async fn edit_settings(userid: id::UserId, key: String, value: String) -> Re
         db.set("edit_id", &"-1").unwrap();
     }
     db.set(key.as_str(), &value).unwrap();
-    println!("Setting {} to {}", key, value);
+    //println!("Setting {} to {}", key, value);
     Ok(())
 }
 
@@ -56,7 +56,7 @@ pub async fn get_setting(userid: id::UserId, key: String) -> Result<String, Erro
         db.set("commission", &"0.65").unwrap();
         db.set("edit_id", &"-1").unwrap();
     }
-    println!("Key: {}", key);
-    println!("Value: {:?}", db.get::<String>(key.as_str()));
+    //println!("Key: {}", key);
+    //println!("Value: {:?}", db.get::<String>(key.as_str()));
     Ok(db.get(key.as_str()).unwrap())
 }

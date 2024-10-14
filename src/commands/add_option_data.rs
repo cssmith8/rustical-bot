@@ -30,7 +30,8 @@ pub struct OpenModal {
 }
 
 #[poise::command(slash_command)]
-pub async fn open(ctx: AppContext<'_>) -> Result<(), Error> {
+pub async fn open(ctx: AppContext<'_>, open_type: String) -> Result<(), Error> {
+    // todo: viewopen option type display
     let data = OpenModal::execute(ctx).await?;
     //println!("Got data: {:?}", data);
     match data {
@@ -72,6 +73,7 @@ pub async fn open(ctx: AppContext<'_>) -> Result<(), Error> {
                 quantity,
                 status,
                 close_id,
+                "put".to_string(),
             )
             .await?;
             ctx.say("Contract Opened").await?;
@@ -92,6 +94,7 @@ pub async fn add_open(
     quantity: u16,
     status: String,
     close_id: Option<u32>,
+    open_type: String,
 ) -> Result<u32, Error> {
     let db_location = format!("data/{}_open.db", userid.to_string());
     let mut new_flag = false;
@@ -118,6 +121,7 @@ pub async fn add_open(
     let new_open = OptionOpen {
         id: end_id,
         date,
+        open_type,
         ticker,
         strike,
         expiry,
@@ -290,3 +294,35 @@ pub async fn add_assignment(
     return Ok(0);
 }
 */
+
+#[poise::command(slash_command)]
+pub async fn expire(ctx: AppContext<'_>) -> Result<(), Error> {
+    let userid = ctx.interaction.user.id;
+
+    let edit_id = get_setting(userid, "edit_id".to_string()).await?;
+    if edit_id == "-1" {
+        ctx.say("No open position selected").await?;
+        return Ok(());
+    }
+    let db_location = format!("data/{}_open.db", userid.to_string());
+    let mut opendb = match PickleDb::load(
+        db_location.clone(),
+        PickleDbDumpPolicy::AutoDump,
+        SerializationMethod::Json,
+    ) {
+        Ok(opendb) => opendb,
+        Err(e) => {
+            ctx.say("Could not load db").await?;
+            return Err(Error::from(e.to_string()));
+        }
+    };
+
+    let mut open = opendb.get::<OptionOpen>(edit_id.as_str()).unwrap();
+    open.status = "expired".to_string();
+    opendb.set(edit_id.as_str(), &open).unwrap();
+
+    ctx.say("Position Expired :money_mouth:").await?;
+
+    edit_settings(userid, "edit_id".to_string(), "-1".to_string()).await?;
+    Ok(())
+}

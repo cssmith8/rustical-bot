@@ -31,7 +31,7 @@ async fn age(
 }
 
 #[poise::command(slash_command, prefix_command)]
-async fn say(ctx: Context<'_>, message: String) -> Result<(), Error> {
+async fn say(ctx: Context<'_>, #[description = "Message to say"] message: String) -> Result<(), Error> {
     ctx.say(message).await?;
     Ok(())
 }
@@ -146,7 +146,9 @@ async fn main() {
                 say(),
                 commands::add_option_data::open(),
                 commands::add_option_data::close(),
-                commands::view_open::view(),
+                commands::add_option_data::expire(),
+                commands::edit_option_data::edit(),
+                commands::view_option::view(),
             ],
             event_handler: |ctx, event, framework, data| {
                 Box::pin(event_handler(ctx, event, framework, data))

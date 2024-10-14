@@ -13,6 +13,7 @@ pub type AppContext<'a> = poise::ApplicationContext<'a, Data, Error>;
 pub struct OptionOpen {
     pub id: u32,
     pub date: DateTime<Local>,
+    pub open_type: String,
     pub ticker: String,
     pub strike: f64,
     pub expiry: DateTime<Local>,
