@@ -73,7 +73,7 @@ pub async fn open(ctx: AppContext<'_>, open_type: String) -> Result<(), Error> {
                 quantity,
                 status,
                 close_id,
-                "put".to_string(),
+                open_type,
             )
             .await?;
             ctx.say("Contract Opened").await?;

@@ -90,3 +90,93 @@ pub async fn edit(ctx: AppContext<'_>) -> Result<(), Error> {
     edit_settings(userid, "edit_id".to_string(), "-1".to_string()).await?;
     Ok(())
 }
+
+#[derive(Debug, Modal)]
+#[name = "Edit Position"] // Struct name by default
+struct DateModal {
+    #[name = "Year"] // Field name by default
+    #[placeholder = "2024"] // No placeholder by default
+    #[max_length = 4]
+    //#[paragraph] // Switches from single-line input to multiline text box
+    year: Option<String>,
+    #[name = "Month"]
+    #[placeholder = "12"]
+    #[max_length = 2]
+    month: Option<String>,
+    #[name = "Day"]
+    #[placeholder = "30"]
+    #[max_length = 2]
+    day: Option<String>,
+}
+
+#[poise::command(slash_command)]
+pub async fn date(ctx: AppContext<'_>) -> Result<(), Error> {
+    let userid = ctx.interaction.user.id;
+
+    let edit_id = get_setting(userid, "edit_id".to_string()).await?;
+    if edit_id == "-1" {
+        ctx.say("No open position selected").await?;
+        return Ok(());
+    }
+    let db_location = format!("data/{}_open.db", userid.to_string());
+    let mut opendb = match PickleDb::load(
+        db_location.clone(),
+        PickleDbDumpPolicy::AutoDump,
+        SerializationMethod::Json,
+    ) {
+        Ok(opendb) => opendb,
+        Err(e) => {
+            ctx.say("Could not load db").await?;
+            return Err(Error::from(e.to_string()));
+        }
+    };
+    let mut open = opendb.get::<OptionOpen>(edit_id.as_str()).unwrap();
+
+    let data = DateModal::execute(ctx).await?;
+    match data {
+        Some(data) => {
+            if let Some(year) = data.year {
+                open.date = Local
+                    .with_ymd_and_hms(
+                        year.parse::<i32>().unwrap(),
+                        open.date.month(),
+                        open.date.day(),
+                        0,
+                        0,
+                        0,
+                    )
+                    .unwrap();
+            }
+            if let Some(month) = data.month {
+                open.date = Local
+                    .with_ymd_and_hms(
+                        open.date.year(),
+                        month.parse::<u32>().unwrap(),
+                        open.date.day(),
+                        0,
+                        0,
+                        0,
+                    )
+                    .unwrap();
+            }
+            if let Some(day) = data.day {
+                open.date = Local
+                    .with_ymd_and_hms(
+                        open.date.year(),
+                        open.date.month(),
+                        day.parse::<u32>().unwrap(),
+                        0,
+                        0,
+                        0,
+                    )
+                    .unwrap();
+            }
+            //add the open contract to the database
+            opendb.set(edit_id.as_str(), &open).unwrap();
+            ctx.say("Position Updated").await?;
+        }
+        None => return Ok(()),
+    }
+    edit_settings(userid, "edit_id".to_string(), "-1".to_string()).await?;
+    Ok(())
+}

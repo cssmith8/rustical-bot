@@ -84,11 +84,6 @@ async fn rustical_message(
     Ok(())
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
-struct AmazingThing {
-    real: String,
-    fake: f32,
-}
 async fn event_handler(
     ctx: &serenity::Context,
     event: &serenity::FullEvent,
@@ -148,6 +143,7 @@ async fn main() {
                 commands::add_option_data::close(),
                 commands::add_option_data::expire(),
                 commands::edit_option_data::edit(),
+                commands::edit_option_data::date(),
                 commands::view_option::view(),
             ],
             event_handler: |ctx, event, framework, data| {

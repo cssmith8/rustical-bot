@@ -6,7 +6,7 @@ use pickledb::{PickleDb, PickleDbDumpPolicy, SerializationMethod};
 
 use super::option_settings::edit_settings;
 
-const SELECT_TEXT: &str = "**Position Selected**\n> Use `/close` to close the position\n> Use `/roll` to roll the position\n> Use `/expire` if the option expired\n> Use `/assign` if the option was assigned";
+const SELECT_TEXT: &str = "**Position Selected**\n> Use `/close` to close the position\n> Use `/roll` to roll the position\n> Use `/expire` if the option expired\n> Use `/assign` if the option was assigned\n> Use `/edit` to edit position info\n> Use `/date` to change open date";
 
 #[poise::command(slash_command)]
 pub async fn view(ctx: AppContext<'_>) -> Result<(), Error> {
@@ -115,9 +115,12 @@ pub async fn view_open(ctx: AppContext<'_>, pages: Vec<OptionOpen>) -> Result<()
 
 pub async fn stringify(index: u32, length: u32, option: &OptionOpen) -> String {
     let date: String = option.expiry.month().to_string() + "/" + &option.expiry.day().to_string() + "/" + &(option.expiry.year() % 100).to_string();
+    let opendate: String = option.date.month().to_string() + "/" + &option.date.day().to_string() + "/" + &(option.date.year() % 100).to_string();
+    //capitalize the open type first letter
+    let open_type = option.open_type.chars().next().unwrap().to_uppercase().collect::<String>();
     let string = format!(
-        "{}/{}\n# {} {} ${} Put\nPremium: ${}\nQuantity: {}\n",
-        index + 1, length, option.ticker, date, option.strike, option.premium, option.quantity
+        "{}/{}\n# {} {} ${} {}\n*Opened on {}*\nPremium: ${}\nQuantity: {}\n",
+        index + 1, length, option.ticker, date, option.strike, open_type, opendate, option.premium, option.quantity
     );
     string
 }
