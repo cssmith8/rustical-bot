@@ -275,11 +275,11 @@ pub async fn assign(ctx: AppContext<'_>) -> Result<(), Error> {
     };
     let mut open = opendb.get::<OptionOpen>(edit_id.as_str()).unwrap();
     
-    let open_id = edit_id.parse::<u32>().unwrap();
-    let assign_id = add_assignment(ctx.interaction.user.id, open.date, open_id, open.ticker.clone(), open.strike, open.quantity).await?;
+    //let open_id = edit_id.parse::<u32>().unwrap();
+    //let assign_id = add_assignment(ctx.interaction.user.id, open.date, open_id, open.ticker.clone(), open.strike, open.quantity).await?;
 
     open.status = "assigned".to_string();
-    open.close_id = Some(assign_id);
+    //open.close_id = Some(assign_id);
     opendb.set(edit_id.as_str(), &open).unwrap();
 
     ctx.say(format!("Assigned {} shares of {}", open.quantity * 100, open.ticker)).await?;
@@ -288,6 +288,7 @@ pub async fn assign(ctx: AppContext<'_>) -> Result<(), Error> {
     Ok(())
 }
 
+#[allow(dead_code)]
 pub async fn add_assignment(
     userid: id::UserId,
     date: DateTime<Local>,

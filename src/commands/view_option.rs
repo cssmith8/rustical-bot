@@ -79,6 +79,10 @@ pub async fn view_open(ctx: AppContext<'_>, pages: Vec<OptionOpen>) -> Result<()
         .timeout(std::time::Duration::from_secs(3600 * 24))
         .await
     {
+        if (press.user.id != ctx.interaction.user.id) {
+            ctx.say("Cannot select another user's position").await?;
+            continue;
+        }
         // Depending on which button was pressed, go to next or previous page
         if press.data.custom_id == next_button_id {
             current_page += 1;
