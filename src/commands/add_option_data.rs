@@ -30,7 +30,12 @@ pub struct OpenModal {
 }
 
 #[poise::command(slash_command)]
-pub async fn open(ctx: AppContext<'_>, open_type: String) -> Result<(), Error> {
+pub async fn open(ctx: AppContext<'_>, #[choices("put","call")] open_type: &'static str) -> Result<(), Error> {
+    //if the open_type is not put or call, return
+    if open_type != "put" && open_type != "call" {
+        ctx.say("Invalid option type").await?;
+        return Ok(());
+    }
     // todo: viewopen option type display
     let data = OpenModal::execute(ctx).await?;
     //println!("Got data: {:?}", data);
@@ -73,7 +78,7 @@ pub async fn open(ctx: AppContext<'_>, open_type: String) -> Result<(), Error> {
                 quantity,
                 status,
                 close_id,
-                open_type,
+                open_type.to_string(),
             )
             .await?;
             ctx.say("Contract Opened").await?;
