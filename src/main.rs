@@ -142,6 +142,7 @@ async fn main() {
                 commands::add_option_data::open(),
                 commands::add_option_data::close(),
                 commands::add_option_data::expire(),
+                commands::add_option_data::assign(),
                 commands::edit_option_data::edit(),
                 commands::edit_option_data::date(),
                 commands::view_option::view(),

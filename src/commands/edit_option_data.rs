@@ -3,6 +3,7 @@ use crate::types::{AppContext, Error};
 use crate::types::OptionOpen;
 use chrono::prelude::*;
 use pickledb::{PickleDb, PickleDbDumpPolicy, SerializationMethod};
+//use poise::serenity_prelude::CreateQuickModal;
 use poise::Modal;
 
 #[derive(Debug, Modal)]
@@ -52,6 +53,18 @@ pub async fn edit(ctx: AppContext<'_>) -> Result<(), Error> {
     };
     let mut open = opendb.get::<OptionOpen>(edit_id.as_str()).unwrap();
 
+    /*
+    let modal = CreateQuickModal::new("About you")
+        .timeout(std::time::Duration::from_secs(600))
+        .short_field("First name")
+        .short_field("Last name")
+        .paragraph_field("Hobbies and interests");
+    let response = ctx.interaction.quick_modal(ctx.serenity_context(), modal).await?;
+    let inputs = response.unwrap().inputs;
+    let (first_name, last_name, hobbies) = (&inputs[0], &inputs[1], &inputs[2]);
+    */
+
+    
     let data = EditModal::execute(ctx).await?;
     match data {
         Some(data) => {
@@ -87,6 +100,7 @@ pub async fn edit(ctx: AppContext<'_>) -> Result<(), Error> {
         }
         None => return Ok(()),
     }
+    
     edit_settings(userid, "edit_id".to_string(), "-1".to_string()).await?;
     Ok(())
 }

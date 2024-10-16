@@ -126,6 +126,7 @@ pub async fn get_matchup(id1: i8, id2: i8) -> Result<f32, Error> {
 }
 
 //get team matchup
+#[allow(dead_code)]
 pub async fn get_team_matchup(blue: Vec<i8>, red: Vec<i8>) -> Result<f32, Error> {
     let mut total = 0.0;
     //for each brawler on the blue team
@@ -152,7 +153,5 @@ pub async fn matchup(ctx: AppContext<'_>, id1: i8, id2: i8) -> Result<(), Error>
         -3.0 => ctx.say("Error: Parsing Error").await?,
         _ => ctx.say(format!("{}", message)).await?,
     };
-    //get_team_matchup with 2 empty vectors
-    get_team_matchup(vec![], vec![]).await?;
     Ok(())
 }

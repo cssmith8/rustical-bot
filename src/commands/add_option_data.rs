@@ -1,6 +1,6 @@
 use crate::commands::option_settings::{get_setting, edit_settings};
 use crate::types::{AppContext, Error};
-use crate::types::{OptionClose, OptionOpen};
+use crate::types::{OptionClose, OptionOpen, OptionAssignment};
 use chrono::prelude::*;
 use pickledb::{PickleDb, PickleDbDumpPolicy, SerializationMethod};
 use poise::{serenity_prelude::model::id, Modal};
@@ -252,7 +252,42 @@ pub async fn add_close(
     return Ok(end_id);
 }
 
-/*
+#[poise::command(slash_command)]
+pub async fn assign(ctx: AppContext<'_>) -> Result<(), Error> {
+    let userid = ctx.interaction.user.id;
+
+    let edit_id = get_setting(userid, "edit_id".to_string()).await?;
+    if edit_id == "-1" {
+        ctx.say("No open position selected").await?;
+        return Ok(());
+    }
+    let db_location = format!("data/{}_open.db", userid.to_string());
+    let mut opendb = match PickleDb::load(
+        db_location.clone(),
+        PickleDbDumpPolicy::AutoDump,
+        SerializationMethod::Json,
+    ) {
+        Ok(opendb) => opendb,
+        Err(e) => {
+            ctx.say("Could not load db").await?;
+            return Err(Error::from(e.to_string()));
+        }
+    };
+    let mut open = opendb.get::<OptionOpen>(edit_id.as_str()).unwrap();
+    
+    let open_id = edit_id.parse::<u32>().unwrap();
+    let assign_id = add_assignment(ctx.interaction.user.id, open.date, open_id, open.ticker.clone(), open.strike, open.quantity).await?;
+
+    open.status = "assigned".to_string();
+    open.close_id = Some(assign_id);
+    opendb.set(edit_id.as_str(), &open).unwrap();
+
+    ctx.say(format!("Assigned {} shares of {}", open.quantity * 100, open.ticker)).await?;
+
+    edit_settings(userid, "edit_id".to_string(), "-1".to_string()).await?;
+    Ok(())
+}
+
 pub async fn add_assignment(
     userid: id::UserId,
     date: DateTime<Local>,
@@ -296,9 +331,9 @@ pub async fn add_assignment(
         .unwrap();
     assignmentdb.set("end_id", &(end_id + 1)).unwrap();
 
-    return Ok(0);
+    return Ok(end_id);
 }
-*/
+
 
 #[poise::command(slash_command)]
 pub async fn expire(ctx: AppContext<'_>) -> Result<(), Error> {
