@@ -79,7 +79,7 @@ pub async fn view_open(ctx: AppContext<'_>, pages: Vec<OptionOpen>) -> Result<()
         .timeout(std::time::Duration::from_secs(3600 * 24))
         .await
     {
-        if (press.user.id != ctx.interaction.user.id) {
+        if press.user.id != ctx.interaction.user.id {
             ctx.say("Cannot select another user's position").await?;
             continue;
         }

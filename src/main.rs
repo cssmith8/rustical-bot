@@ -93,6 +93,7 @@ async fn event_handler(
     match event {
         serenity::FullEvent::Ready { data_about_bot, .. } => {
             println!("Logged in as {}", data_about_bot.user.tag());
+            
             rustical_message(
                 ctx,
                 data,
@@ -100,6 +101,27 @@ async fn event_handler(
                 env::var("LAPTOP").expect("0"),
             )
             .await?;
+            /*
+            let db_location = "data/test.db";
+            let mut db = match PickleDb::load(
+                db_location,
+                PickleDbDumpPolicy::AutoDump,
+                SerializationMethod::Json,
+            ) {
+                Ok(db) => db,
+                Err(e) => {
+                    //ctx.say("Could not load db").await?;
+                    return Err(Error::from(e.to_string()));
+                }
+            };
+            // create a new list
+            db.lcreate("list1")?;
+            // add a bunch of numbers to the list
+            db.lextend("list1", &vec![100, 200, 300]).unwrap();
+            // get the list
+            let item: i32 = db.lget("list1", db.llen("list1") - 1).unwrap();
+            println!("item: {}", item);
+            */
         }
         // me when the
         serenity::FullEvent::Message { new_message } => {
@@ -136,16 +158,16 @@ async fn main() {
         .options(poise::FrameworkOptions {
             commands: vec![
                 age(),
-                commands::modal::modal(),
-                commands::stars::matchup::matchup(),
                 say(),
-                commands::add_option_data::open(),
-                commands::add_option_data::close(),
-                commands::add_option_data::expire(),
-                commands::add_option_data::assign(),
-                commands::edit_option_data::edit(),
-                commands::edit_option_data::date(),
-                commands::view_option::view(),
+                //commands::stars::matchup::matchup(),
+                commands::modal::modal(),
+                // commands::add_option_data::open(),
+                // commands::add_option_data::close(),
+                // commands::add_option_data::expire(),
+                // commands::add_option_data::assign(),
+                // commands::edit_option_data::edit(),
+                // commands::edit_option_data::date(),
+                // commands::view_option::view(),
             ],
             event_handler: |ctx, event, framework, data| {
                 Box::pin(event_handler(ctx, event, framework, data))

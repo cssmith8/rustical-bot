@@ -35,11 +35,12 @@ pub struct OptionClose {
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
-pub struct OptionAssignment {
-    pub id: u32,
-    pub date: DateTime<Local>,
-    pub open_id: u32,
-    pub ticker: String,
-    pub strike: f64,
-    pub quantity: u16,
+pub struct Contract {
+    pub open: OptionOpen,
+    pub close: Option<OptionClose>,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct Position {
+    pub contracts: Vec<Contract>,
 }

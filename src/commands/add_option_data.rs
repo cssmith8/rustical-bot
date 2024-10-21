@@ -1,6 +1,6 @@
 use crate::commands::option_settings::{get_setting, edit_settings};
 use crate::types::{AppContext, Error};
-use crate::types::{OptionClose, OptionOpen, OptionAssignment};
+use crate::types::{OptionClose, OptionOpen};
 use chrono::prelude::*;
 use pickledb::{PickleDb, PickleDbDumpPolicy, SerializationMethod};
 use poise::{serenity_prelude::model::id, Modal};
@@ -287,54 +287,6 @@ pub async fn assign(ctx: AppContext<'_>) -> Result<(), Error> {
     edit_settings(userid, "edit_id".to_string(), "-1".to_string()).await?;
     Ok(())
 }
-
-#[allow(dead_code)]
-pub async fn add_assignment(
-    userid: id::UserId,
-    date: DateTime<Local>,
-    open_id: u32,
-    ticker: String,
-    strike: f64,
-    quantity: u16,
-) -> Result<u32, Error> {
-    let db_location = format!("data/{}_assignment.db", userid.to_string());
-    let mut new_flag = false;
-    let mut assignmentdb = match PickleDb::load(
-        db_location.clone(),
-        PickleDbDumpPolicy::AutoDump,
-        SerializationMethod::Json,
-    ) {
-        Ok(assignmentdb) => assignmentdb,
-        Err(e) => {
-            println!("Could not load db: {}, creating new one", e.to_string());
-            new_flag = true;
-            PickleDb::new(
-                db_location.clone(),
-                PickleDbDumpPolicy::AutoDump,
-                SerializationMethod::Json,
-            )
-        }
-    };
-    if new_flag {
-        assignmentdb.set("end_id", &0).unwrap();
-    }
-    let end_id = assignmentdb.get::<u32>("end_id").unwrap();
-    let new_assignment = OptionAssignment {
-        id: end_id,
-        date,
-        open_id,
-        ticker,
-        strike,
-        quantity,
-    };
-    assignmentdb
-        .set(end_id.to_string().as_str(), &new_assignment)
-        .unwrap();
-    assignmentdb.set("end_id", &(end_id + 1)).unwrap();
-
-    return Ok(end_id);
-}
-
 
 #[poise::command(slash_command)]
 pub async fn expire(ctx: AppContext<'_>) -> Result<(), Error> {
