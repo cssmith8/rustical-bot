@@ -141,66 +141,17 @@ pub async fn close(ctx: AppContext<'_>) -> Result<(), Error> {
         premium: data.premium.parse::<f64>().unwrap(),
     });
     position.contracts[last_index].open.status = "closed".to_string();
+    let gain: f64 = (position.contracts[last_index].open.premium - data.premium.parse::<f64>().unwrap()) * (position.contracts[last_index].open.quantity as f64) * 100 as f64;
     position_list_replace(&mut db, "positions", edit_id as usize, position);
-    // let gain: f64 = (open.premium - premium) * (open.quantity as f64) * 100 as f64;
-    // let money_mouth = if gain > 0.0 { ":money_mouth:" } else { "" };
-    // ctx.say(format!(
-    //     "Contract Closed. You made ${} {}",
-    //     gain, money_mouth
-    // ))
-    // .await?;
-    // edit_settings(userid, "edit_id".to_string(), "-1".to_string()).await?;
+    let money_mouth = if gain > 0.0 { ":money_mouth:" } else { "" };
+    ctx.say(format!(
+        "Contract Closed. You made ${} {}",
+        gain, money_mouth
+    ))
+    .await?;
+    db.set("edit_id", &-1)?;
     Ok(())
 }
-/*
-pub async fn add_close(
-    userid: id::UserId,
-    date: DateTime<Local>,
-    close_type: String,
-    open_id: u32,
-    roll_id: i32,
-    premium: f64,
-    quantity: u16,
-) -> Result<u32, Error> {
-    let db_location = format!("data/{}_close.db", userid.to_string());
-    let mut new_flag = false;
-    let mut closedb = match PickleDb::load(
-        db_location.clone(),
-        PickleDbDumpPolicy::AutoDump,
-        SerializationMethod::Json,
-    ) {
-        Ok(closedb) => closedb,
-        Err(e) => {
-            println!("Could not load db: {}, creating new one", e.to_string());
-            new_flag = true;
-            PickleDb::new(
-                db_location.clone(),
-                PickleDbDumpPolicy::AutoDump,
-                SerializationMethod::Json,
-            )
-        }
-    };
-    if new_flag {
-        closedb.set("end_id", &0).unwrap();
-    }
-    let end_id = closedb.get::<u32>("end_id").unwrap();
-    let new_close = OptionClose {
-        id: end_id,
-        date,
-        close_type,
-        open_id,
-        roll_id,
-        premium,
-        quantity,
-    };
-    closedb
-        .set(end_id.to_string().as_str(), &new_close)
-        .unwrap();
-    closedb.set("end_id", &(end_id + 1)).unwrap();
-
-    return Ok(end_id);
-}
-    */
 
 #[poise::command(slash_command)]
 pub async fn assign(ctx: AppContext<'_>) -> Result<(), Error> {
