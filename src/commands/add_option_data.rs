@@ -1,9 +1,10 @@
 use crate::commands::option_settings::{edit_settings, get_setting};
-use crate::types::{open_db, AppContext, Error};
+use crate::types::{AppContext, Error};
 use crate::types::{Contract, OptionClose, OptionOpen, Position};
+use crate::utils::open_option_db;
 use chrono::prelude::*;
 use pickledb::{PickleDb, PickleDbDumpPolicy, SerializationMethod};
-use poise::{serenity_prelude::model::id, Modal};
+use poise::Modal;
 
 #[derive(Debug, Modal)]
 #[name = "Open Contract"] // Struct name by default
@@ -63,7 +64,7 @@ pub async fn open(
             let status = "open".to_string();
             //add the open contract to the database
             let db_location = format!("data/options/{}.db", userid.to_string());
-            let mut db = match open_db(db_location.clone()) {
+            let mut db = match open_option_db(db_location.clone()) {
                 Some(db) => db,
                 None => {
                     return Err(Error::from("Could not load db"));
@@ -111,7 +112,7 @@ pub async fn close(ctx: AppContext<'_>) -> Result<(), Error> {
     let userid = ctx.interaction.user.id;
     let db_location = format!("data/options/{}.db", userid.to_string());
 
-    let mut db = match open_db(db_location.clone()) {
+    let mut db = match open_option_db(db_location.clone()) {
         Some(db) => db,
         None => {
             return Err(Error::from("Could not load db"));
