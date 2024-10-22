@@ -1,8 +1,8 @@
-use crate::types::{AppContext, Error};
 use crate::types::OptionOpen;
+use crate::types::{AppContext, Error};
 use chrono::Datelike;
-use poise::serenity_prelude::{self as serenity, Colour};
 use pickledb::{PickleDb, PickleDbDumpPolicy, SerializationMethod};
+use poise::serenity_prelude::{self as serenity, Colour};
 
 use super::option_settings::edit_settings;
 
@@ -42,11 +42,11 @@ pub async fn view(ctx: AppContext<'_>) -> Result<(), Error> {
         return Ok(());
     }
 
-    view_open(ctx, open_options).await?;
+    //view_open(ctx, open_options).await?;
 
     Ok(())
 }
-
+/*
 pub async fn view_open(ctx: AppContext<'_>, pages: Vec<OptionOpen>) -> Result<(), serenity::Error> {
     // Define some unique identifiers for the navigation buttons
     let ctx_id = ctx.id();
@@ -63,7 +63,10 @@ pub async fn view_open(ctx: AppContext<'_>, pages: Vec<OptionOpen>) -> Result<()
         ]);
 
         poise::CreateReply::default()
-            .embed(serenity::CreateEmbed::default().description(stringify(0, pages.len() as u32, &pages[0]).await))
+            .embed(
+                serenity::CreateEmbed::default()
+                    .description(stringify(0, pages.len() as u32, &pages[0]).await),
+            )
             .components(vec![components])
     };
 
@@ -95,7 +98,11 @@ pub async fn view_open(ctx: AppContext<'_>, pages: Vec<OptionOpen>) -> Result<()
             //MyModal::execute(ctx).await?;
             close_button(ctx, pages[current_page].id).await.unwrap();
             //ctx.say(SELECT_TEXT).await?;
-            let reply = poise::CreateReply::default().embed(serenity::CreateEmbed::default().description(SELECT_TEXT).color(Colour::DARK_GREEN));
+            let reply = poise::CreateReply::default().embed(
+                serenity::CreateEmbed::default()
+                    .description(SELECT_TEXT)
+                    .color(Colour::DARK_GREEN),
+            );
             ctx.send(reply).await?;
         } else {
             // This is an unrelated button interaction
@@ -107,8 +114,16 @@ pub async fn view_open(ctx: AppContext<'_>, pages: Vec<OptionOpen>) -> Result<()
             .create_response(
                 ctx.serenity_context(),
                 serenity::CreateInteractionResponse::UpdateMessage(
-                    serenity::CreateInteractionResponseMessage::new()
-                        .embed(serenity::CreateEmbed::new().description(stringify(current_page as u32, pages.len() as u32, &pages[current_page]).await)),
+                    serenity::CreateInteractionResponseMessage::new().embed(
+                        serenity::CreateEmbed::new().description(
+                            stringify(
+                                current_page as u32,
+                                pages.len() as u32,
+                                &pages[current_page],
+                            )
+                            .await,
+                        ),
+                    ),
                 ),
             )
             .await?;
@@ -116,20 +131,47 @@ pub async fn view_open(ctx: AppContext<'_>, pages: Vec<OptionOpen>) -> Result<()
 
     Ok(())
 }
-
+*/
 pub async fn stringify(index: u32, length: u32, option: &OptionOpen) -> String {
-    let date: String = option.expiry.month().to_string() + "/" + &option.expiry.day().to_string() + "/" + &(option.expiry.year() % 100).to_string();
-    let opendate: String = option.date.month().to_string() + "/" + &option.date.day().to_string() + "/" + &(option.date.year() % 100).to_string();
+    let date: String = option.expiry.month().to_string()
+        + "/"
+        + &option.expiry.day().to_string()
+        + "/"
+        + &(option.expiry.year() % 100).to_string();
+    let opendate: String = option.date.month().to_string()
+        + "/"
+        + &option.date.day().to_string()
+        + "/"
+        + &(option.date.year() % 100).to_string();
     //capitalize the open type first letter
-    let open_type = option.open_type.chars().next().unwrap().to_uppercase().collect::<String>();
+    let open_type = option
+        .open_type
+        .chars()
+        .next()
+        .unwrap()
+        .to_uppercase()
+        .collect::<String>();
     let string = format!(
         "{}/{}\n# {} {} ${} {}\n*Opened on {}*\nPremium: ${}\nQuantity: {}\n",
-        index + 1, length, option.ticker, date, option.strike, open_type, opendate, option.premium, option.quantity
+        index + 1,
+        length,
+        option.ticker,
+        date,
+        option.strike,
+        open_type,
+        opendate,
+        option.premium,
+        option.quantity
     );
     string
 }
 
 pub async fn close_button(ctx: AppContext<'_>, index: u32) -> Result<(), Error> {
-    edit_settings(ctx.interaction.user.id, "edit_id".to_string(), index.to_string()).await?;
+    edit_settings(
+        ctx.interaction.user.id,
+        "edit_id".to_string(),
+        index.to_string(),
+    )
+    .await?;
     Ok(())
 }

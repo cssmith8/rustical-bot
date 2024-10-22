@@ -1,5 +1,5 @@
 use chrono::prelude::*;
-use pickledb::PickleDb;
+use pickledb::{PickleDb, PickleDbDumpPolicy, SerializationMethod};
 use tokio::sync::Mutex;
 
 pub struct Data {
@@ -11,7 +11,6 @@ pub type AppContext<'a> = poise::ApplicationContext<'a, Data, Error>;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct OptionOpen {
-    pub id: u32,
     pub date: DateTime<Local>,
     pub open_type: String,
     pub ticker: String,
@@ -20,18 +19,13 @@ pub struct OptionOpen {
     pub premium: f64,
     pub quantity: u16,
     pub status: String,
-    pub close_id: Option<u32>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct OptionClose {
-    pub id: u32,
     pub date: DateTime<Local>,
     pub close_type: String,
-    pub open_id: u32,
-    pub roll_id: i32,
     pub premium: f64,
-    pub quantity: u16,
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -43,4 +37,30 @@ pub struct Contract {
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Position {
     pub contracts: Vec<Contract>,
+}
+
+pub fn open_db(path: String) -> Option<PickleDb> {
+    let mut new_flag = false;
+    let mut opendb = match PickleDb::load(
+        path.clone(),
+        PickleDbDumpPolicy::AutoDump,
+        SerializationMethod::Json,
+    ) {
+        Ok(opendb) => opendb,
+        Err(e) => {
+            println!("Could not load db: {}, creating new one", e.to_string());
+            new_flag = true;
+            PickleDb::new(
+                path.clone(),
+                PickleDbDumpPolicy::AutoDump,
+                SerializationMethod::Json,
+            )
+        }
+    };
+    if new_flag {
+        opendb.set("commission", &0.65).unwrap();
+        opendb.set("edit_id", &-1).unwrap();
+        opendb.lcreate("positions").unwrap();
+    }
+    Some(opendb)
 }

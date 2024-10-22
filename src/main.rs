@@ -31,7 +31,10 @@ async fn age(
 }
 
 #[poise::command(slash_command, prefix_command)]
-async fn say(ctx: Context<'_>, #[description = "Message to say"] message: String) -> Result<(), Error> {
+async fn say(
+    ctx: Context<'_>,
+    #[description = "Message to say"] message: String,
+) -> Result<(), Error> {
     ctx.say(message).await?;
     Ok(())
 }
@@ -93,7 +96,7 @@ async fn event_handler(
     match event {
         serenity::FullEvent::Ready { data_about_bot, .. } => {
             println!("Logged in as {}", data_about_bot.user.tag());
-            
+
             rustical_message(
                 ctx,
                 data,
@@ -101,7 +104,7 @@ async fn event_handler(
                 env::var("LAPTOP").expect("0"),
             )
             .await?;
-            /*
+
             let db_location = "data/test.db";
             let mut db = match PickleDb::load(
                 db_location,
@@ -121,7 +124,6 @@ async fn event_handler(
             // get the list
             let item: i32 = db.lget("list1", db.llen("list1") - 1).unwrap();
             println!("item: {}", item);
-            */
         }
         // me when the
         serenity::FullEvent::Message { new_message } => {
