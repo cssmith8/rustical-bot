@@ -1,7 +1,7 @@
 use crate::commands::option_settings::{edit_settings, get_setting};
-use crate::types::{AppContext, Error};
+use crate::types::{position_list_replace, AppContext, Error};
 use crate::types::{Contract, OptionClose, OptionOpen, Position};
-use crate::utils::open_option_db;
+use crate::types::open_option_db;
 use chrono::prelude::*;
 use pickledb::{PickleDb, PickleDbDumpPolicy, SerializationMethod};
 use poise::Modal;
@@ -140,6 +140,8 @@ pub async fn close(ctx: AppContext<'_>) -> Result<(), Error> {
         close_type: "close".to_string(),
         premium: data.premium.parse::<f64>().unwrap(),
     });
+    position.contracts[last_index].open.status = "closed".to_string();
+    position_list_replace(&mut db, "positions", edit_id as usize, position);
     // let gain: f64 = (open.premium - premium) * (open.quantity as f64) * 100 as f64;
     // let money_mouth = if gain > 0.0 { ":money_mouth:" } else { "" };
     // ctx.say(format!(
