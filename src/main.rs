@@ -97,13 +97,13 @@ async fn event_handler(
         serenity::FullEvent::Ready { data_about_bot, .. } => {
             println!("Logged in as {}", data_about_bot.user.tag());
 
-            // rustical_message(
-            //     ctx,
-            //     data,
-            //     ChannelId::new(1160065321013620857),
-            //     env::var("LAPTOP").expect("0"),
-            // )
-            // .await?;
+            rustical_message(
+                ctx,
+                data,
+                ChannelId::new(1160065321013620857),
+                env::var("LAPTOP").expect("0"),
+            )
+            .await?;
 
             let db_location = "data/test.db";
             let mut db = match PickleDb::load(
@@ -165,11 +165,11 @@ async fn main() {
                 commands::modal::modal(),
                 commands::add_option_data::open(),
                 commands::add_option_data::close(),
-                // commands::add_option_data::expire(),
-                // commands::add_option_data::assign(),
+                commands::add_option_data::expire(),
+                commands::add_option_data::assign(),
                 // commands::edit_option_data::edit(),
                 // commands::edit_option_data::date(),
-                // commands::view_option::view(),
+                commands::view_option::view(),
             ],
             event_handler: |ctx, event, framework, data| {
                 Box::pin(event_handler(ctx, event, framework, data))

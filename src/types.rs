@@ -81,6 +81,13 @@ pub fn position_list_replace(db: &mut PickleDb, name: &str, index: usize, positi
     db.lextend(name, &vec).unwrap();
 }
 
+//function to check the status of the last option open in a position
+pub fn get_position_status(position: Position) -> String {
+    let last_index = position.contracts.len() - 1;
+    let open_status = position.contracts[last_index].open.status.clone();
+    open_status
+}
+
 // pub fn int_list_replace(db: &mut PickleDb, name: &str, index: usize, position: i32) {
 //     //empty vector
 //     let mut vec: Vec<i32> = Vec::new();

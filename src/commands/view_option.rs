@@ -1,53 +1,55 @@
-use crate::types::OptionOpen;
+use crate::types::{get_position_status, open_option_db, OptionOpen, Position};
 use crate::types::{AppContext, Error};
 use chrono::Datelike;
-use pickledb::{PickleDb, PickleDbDumpPolicy, SerializationMethod};
 use poise::serenity_prelude::{self as serenity, Colour};
 
 use super::option_settings::edit_settings;
 
 const SELECT_TEXT: &str = "**Position Selected**\n> Use `/close` to close the position\n> Use `/roll` to roll the position\n> Use `/expire` if the option expired\n> Use `/assign` if the option was assigned\n> Use `/edit` to edit position info\n> Use `/date` to change open date";
 
+pub struct OpenPosition {
+    id: usize,
+    pos: Position,
+}
+
 #[poise::command(slash_command)]
 pub async fn view(ctx: AppContext<'_>) -> Result<(), Error> {
     let userid = ctx.interaction.user.id;
+    let db_location = format!("data/options/{}.db", userid.to_string());
 
-    //open immutable db
-    let db_location = format!("data/{}_open.db", userid.to_string());
-    let opendb = match PickleDb::load(
-        db_location.clone(),
-        PickleDbDumpPolicy::AutoDump,
-        SerializationMethod::Json,
-    ) {
-        Ok(opendb) => opendb,
-        Err(_e) => {
-            ctx.say("No option history found").await?;
-            return Ok(());
+    //immutable db
+    let db = match open_option_db(db_location.clone()) {
+        Some(db) => db,
+        None => {
+            return Err(Error::from("Could not load db"));
         }
     };
 
-    let end_id = opendb.get::<u32>("end_id").unwrap();
-    let mut open_options: Vec<OptionOpen> = Vec::new();
-    for i in 0..end_id {
-        let open_option = opendb.get::<OptionOpen>(i.to_string().as_str()).unwrap();
-        //if the status is open, add to list
-        if open_option.status == "open" {
-            open_options.push(open_option);
+    let mut open_positions: Vec<OpenPosition> = Vec::new();
+    let mut id: usize = 0;
+    // iterate over the items in list1
+    for item_iter in db.liter("positions") {
+        if get_position_status(item_iter.get_item::<Position>().unwrap()) == "open" {
+            open_positions.push(OpenPosition {
+                id: id,
+                pos: item_iter.get_item::<Position>().unwrap()
+            });
         }
+        id += 1;
     }
 
     //if no open options, return
-    if open_options.len() == 0 {
+    if open_positions.len() == 0 {
         ctx.say("You have no open positions").await?;
         return Ok(());
     }
 
-    //view_open(ctx, open_options).await?;
+    view_open(ctx, open_positions).await?;
 
     Ok(())
 }
-/*
-pub async fn view_open(ctx: AppContext<'_>, pages: Vec<OptionOpen>) -> Result<(), serenity::Error> {
+
+pub async fn view_open(ctx: AppContext<'_>, pages: Vec<OpenPosition>) -> Result<(), serenity::Error> {
     // Define some unique identifiers for the navigation buttons
     let ctx_id = ctx.id();
     let prev_button_id = format!("{}prev", ctx_id);
@@ -65,7 +67,7 @@ pub async fn view_open(ctx: AppContext<'_>, pages: Vec<OptionOpen>) -> Result<()
         poise::CreateReply::default()
             .embed(
                 serenity::CreateEmbed::default()
-                    .description(stringify(0, pages.len() as u32, &pages[0]).await),
+                    .description(stringify_position(0, pages.len() as u32, &pages[0]).await),
             )
             .components(vec![components])
     };
@@ -116,7 +118,7 @@ pub async fn view_open(ctx: AppContext<'_>, pages: Vec<OptionOpen>) -> Result<()
                 serenity::CreateInteractionResponse::UpdateMessage(
                     serenity::CreateInteractionResponseMessage::new().embed(
                         serenity::CreateEmbed::new().description(
-                            stringify(
+                            stringify_position(
                                 current_page as u32,
                                 pages.len() as u32,
                                 &pages[current_page],
@@ -131,7 +133,11 @@ pub async fn view_open(ctx: AppContext<'_>, pages: Vec<OptionOpen>) -> Result<()
 
     Ok(())
 }
-*/
+
+pub async fn stringify_position(index: u32, length: u32, position: &OpenPosition) -> String {
+    stringify(index, length, &position.pos.contracts[position.pos.contracts.len() - 1].open).await
+}
+
 pub async fn stringify(index: u32, length: u32, option: &OptionOpen) -> String {
     let date: String = option.expiry.month().to_string()
         + "/"
@@ -166,7 +172,8 @@ pub async fn stringify(index: u32, length: u32, option: &OptionOpen) -> String {
     string
 }
 
-pub async fn close_button(ctx: AppContext<'_>, index: u32) -> Result<(), Error> {
+pub async fn close_button(ctx: AppContext<'_>, index: usize) -> Result<(), Error> {
+    //todo replace this because it saves edit_id as a string
     edit_settings(
         ctx.interaction.user.id,
         "edit_id".to_string(),

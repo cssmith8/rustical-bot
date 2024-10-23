@@ -156,72 +156,69 @@ pub async fn close(ctx: AppContext<'_>) -> Result<(), Error> {
 #[poise::command(slash_command)]
 pub async fn assign(ctx: AppContext<'_>) -> Result<(), Error> {
     let userid = ctx.interaction.user.id;
+    let db_location = format!("data/options/{}.db", userid.to_string());
 
-    let edit_id = get_setting(userid, "edit_id".to_string()).await?;
-    if edit_id == "-1" {
+    let mut db = match open_option_db(db_location.clone()) {
+        Some(db) => db,
+        None => {
+            return Err(Error::from("Could not load db"));
+        }
+    };
+    let edit_id: i32 = db.get("edit_id").unwrap();
+    if edit_id == -1 {
         ctx.say("No open position selected").await?;
         return Ok(());
     }
-    let db_location = format!("data/{}_open.db", userid.to_string());
-    let mut opendb = match PickleDb::load(
-        db_location.clone(),
-        PickleDbDumpPolicy::AutoDump,
-        SerializationMethod::Json,
-    ) {
-        Ok(opendb) => opendb,
-        Err(e) => {
-            ctx.say("Could not load db").await?;
-            return Err(Error::from(e.to_string()));
-        }
-    };
-    let mut open = opendb.get::<OptionOpen>(edit_id.as_str()).unwrap();
-
-    //let open_id = edit_id.parse::<u32>().unwrap();
-    //let assign_id = add_assignment(ctx.interaction.user.id, open.date, open_id, open.ticker.clone(), open.strike, open.quantity).await?;
-
-    open.status = "assigned".to_string();
-    //open.close_id = Some(assign_id);
-    opendb.set(edit_id.as_str(), &open).unwrap();
+    if edit_id >= db.llen("positions") as i32 {
+        ctx.say("Invalid selection").await?;
+        return Ok(());
+    }
+    //get the position at index edit_id
+    let mut position: Position = db.lget("positions", edit_id as usize).unwrap();
+    let last_index = position.contracts.len() - 1;
+    position.contracts[last_index].open.status = "assigned".to_string();
+    let q = position.contracts[last_index].open.quantity;
+    let ticker = position.contracts[last_index].open.ticker.clone();
+    position_list_replace(&mut db, "positions", edit_id as usize, position);
 
     ctx.say(format!(
         "Assigned {} shares of {}",
-        open.quantity * 100,
-        open.ticker
+        q, ticker
     ))
     .await?;
 
-    edit_settings(userid, "edit_id".to_string(), "-1".to_string()).await?;
+    db.set("edit_id", &-1)?;
     Ok(())
 }
 
 #[poise::command(slash_command)]
 pub async fn expire(ctx: AppContext<'_>) -> Result<(), Error> {
     let userid = ctx.interaction.user.id;
+    let db_location = format!("data/options/{}.db", userid.to_string());
 
-    let edit_id = get_setting(userid, "edit_id".to_string()).await?;
-    if edit_id == "-1" {
+    let mut db = match open_option_db(db_location.clone()) {
+        Some(db) => db,
+        None => {
+            return Err(Error::from("Could not load db"));
+        }
+    };
+    let edit_id: i32 = db.get("edit_id").unwrap();
+    if edit_id == -1 {
         ctx.say("No open position selected").await?;
         return Ok(());
     }
-    let db_location = format!("data/{}_open.db", userid.to_string());
-    let mut opendb = match PickleDb::load(
-        db_location.clone(),
-        PickleDbDumpPolicy::AutoDump,
-        SerializationMethod::Json,
-    ) {
-        Ok(opendb) => opendb,
-        Err(e) => {
-            ctx.say("Could not load db").await?;
-            return Err(Error::from(e.to_string()));
-        }
-    };
+    if edit_id >= db.llen("positions") as i32 {
+        ctx.say("Invalid selection").await?;
+        return Ok(());
+    }
+    //get the position at index edit_id
+    let mut position: Position = db.lget("positions", edit_id as usize).unwrap();
+    let last_index = position.contracts.len() - 1;
+    position.contracts[last_index].open.status = "expired".to_string();
+    position_list_replace(&mut db, "positions", edit_id as usize, position);
 
-    let mut open = opendb.get::<OptionOpen>(edit_id.as_str()).unwrap();
-    open.status = "expired".to_string();
-    opendb.set(edit_id.as_str(), &open).unwrap();
+    ctx.say("Contract Expired :money_mouth:").await?;
 
-    ctx.say("Position Expired :money_mouth:").await?;
-
-    edit_settings(userid, "edit_id".to_string(), "-1".to_string()).await?;
+    db.set("edit_id", &-1)?;
     Ok(())
 }

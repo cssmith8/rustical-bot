@@ -4,7 +4,7 @@ use pickledb::{PickleDb, PickleDbDumpPolicy, SerializationMethod};
 
 pub async fn edit_settings(userid: id::UserId, key: String, value: String) -> Result<(), Error> {
     //get the user id
-    let db_location = format!("data/{}.db", userid.to_string());
+    let db_location = format!("data/options/{}.db", userid.to_string());
     let mut new_flag = false;
     let mut db = match PickleDb::load(
         db_location.clone(),
@@ -34,7 +34,7 @@ pub async fn edit_settings(userid: id::UserId, key: String, value: String) -> Re
 //get setting
 pub async fn get_setting(userid: id::UserId, key: String) -> Result<String, Error> {
     //get the user id
-    let db_location = format!("data/{}.db", userid.to_string());
+    let db_location = format!("data/options/{}.db", userid.to_string());
     let mut new_flag = false;
     let mut db = match PickleDb::load(
         db_location.clone(),
