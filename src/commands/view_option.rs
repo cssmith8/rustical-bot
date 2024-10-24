@@ -1,9 +1,8 @@
-use crate::types::{get_position_status, open_option_db, OptionOpen, Position};
 use crate::types::{AppContext, Error};
+use crate::types::{OptionOpen, Position};
+use crate::utils::{get_position_status, open_option_db};
 use chrono::Datelike;
 use poise::serenity_prelude::{self as serenity, Colour};
-
-use super::option_settings::edit_settings;
 
 const SELECT_TEXT: &str = "**Position Selected**\n> Use `/close` to close the position\n> Use `/roll` to roll the position\n> Use `/expire` if the option expired\n> Use `/assign` if the option was assigned\n> Use `/edit` to edit position info\n> Use `/date` to change open date";
 
@@ -32,7 +31,7 @@ pub async fn view(ctx: AppContext<'_>) -> Result<(), Error> {
         if get_position_status(item_iter.get_item::<Position>().unwrap()) == "open" {
             open_positions.push(OpenPosition {
                 id: id,
-                pos: item_iter.get_item::<Position>().unwrap()
+                pos: item_iter.get_item::<Position>().unwrap(),
             });
         }
         id += 1;
@@ -49,7 +48,10 @@ pub async fn view(ctx: AppContext<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-pub async fn view_open(ctx: AppContext<'_>, pages: Vec<OpenPosition>) -> Result<(), serenity::Error> {
+pub async fn view_open(
+    ctx: AppContext<'_>,
+    pages: Vec<OpenPosition>,
+) -> Result<(), serenity::Error> {
     // Define some unique identifiers for the navigation buttons
     let ctx_id = ctx.id();
     let prev_button_id = format!("{}prev", ctx_id);
@@ -135,7 +137,12 @@ pub async fn view_open(ctx: AppContext<'_>, pages: Vec<OpenPosition>) -> Result<
 }
 
 pub async fn stringify_position(index: u32, length: u32, position: &OpenPosition) -> String {
-    stringify(index, length, &position.pos.contracts[position.pos.contracts.len() - 1].open).await
+    stringify(
+        index,
+        length,
+        &position.pos.contracts[position.pos.contracts.len() - 1].open,
+    )
+    .await
 }
 
 pub async fn stringify(index: u32, length: u32, option: &OptionOpen) -> String {
@@ -173,12 +180,15 @@ pub async fn stringify(index: u32, length: u32, option: &OptionOpen) -> String {
 }
 
 pub async fn close_button(ctx: AppContext<'_>, index: usize) -> Result<(), Error> {
-    //todo replace this because it saves edit_id as a string
-    edit_settings(
-        ctx.interaction.user.id,
-        "edit_id".to_string(),
-        index.to_string(),
-    )
-    .await?;
+    let userid = ctx.interaction.user.id;
+    let db_location = format!("data/options/{}.db", userid.to_string());
+
+    let mut db = match open_option_db(db_location.clone()) {
+        Some(db) => db,
+        None => {
+            return Err(Error::from("Could not load db"));
+        }
+    };
+    db.set("edit_id", &index).unwrap();
     Ok(())
 }

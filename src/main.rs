@@ -13,6 +13,7 @@ use std::env;
 
 mod commands;
 mod types;
+mod utils;
 
 #[derive(Debug, serde::Deserialize)]
 struct Record {
@@ -100,7 +101,8 @@ async fn event_handler(
             rustical_message(
                 ctx,
                 data,
-                ChannelId::new(1160065321013620857),
+                ChannelId::new(1160065321013620857), //bot
+                //ChannelId::new(1120455140416172115), //genny
                 env::var("LAPTOP").expect("0"),
             )
             .await?;
@@ -117,13 +119,13 @@ async fn event_handler(
                     return Err(Error::from(e.to_string()));
                 }
             };
-            // create a new list
-            db.lcreate("list1")?;
-            // add a bunch of numbers to the list
-            db.lextend("list1", &vec![100, 200, 300]).unwrap();
-            // get the list
-            let item: i32 = db.lget("list1", db.llen("list1") - 1).unwrap();
-            println!("og item: {}", item);
+            // // create a new list
+            // db.lcreate("list1")?;
+            // // add a bunch of numbers to the list
+            // db.lextend("list1", &vec![100, 200, 300]).unwrap();
+            // // get the list
+            // let item: i32 = db.lget("list1", db.llen("list1") - 1).unwrap();
+            // //println!("og item: {}", item);
         }
         // me when the
         serenity::FullEvent::Message { new_message } => {
@@ -167,8 +169,8 @@ async fn main() {
                 commands::add_option_data::close(),
                 commands::add_option_data::expire(),
                 commands::add_option_data::assign(),
-                // commands::edit_option_data::edit(),
-                // commands::edit_option_data::date(),
+                commands::edit_option_data::edit(),
+                commands::edit_option_data::date(),
                 commands::view_option::view(),
             ],
             event_handler: |ctx, event, framework, data| {
