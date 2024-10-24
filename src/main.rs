@@ -107,18 +107,18 @@ async fn event_handler(
             )
             .await?;
 
-            let db_location = "data/test.db";
-            let mut db = match PickleDb::load(
-                db_location,
-                PickleDbDumpPolicy::AutoDump,
-                SerializationMethod::Json,
-            ) {
-                Ok(db) => db,
-                Err(e) => {
-                    //ctx.say("Could not load db").await?;
-                    return Err(Error::from(e.to_string()));
-                }
-            };
+            // let db_location = "data/test.db";
+            // let mut db = match PickleDb::load(
+            //     db_location,
+            //     PickleDbDumpPolicy::AutoDump,
+            //     SerializationMethod::Json,
+            // ) {
+            //     Ok(db) => db,
+            //     Err(e) => {
+            //         //ctx.say("Could not load db").await?;
+            //         return Err(Error::from(e.to_string()));
+            //     }
+            // };
             // // create a new list
             // db.lcreate("list1")?;
             // // add a bunch of numbers to the list

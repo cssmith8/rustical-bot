@@ -16,7 +16,6 @@ serenity = { version = "0.11.6", default-features = false, features = [
 tokio = { version = "1.37.0", features = ["full"] }
 serde = { version = "1.0.201", features = ["serde_derive"] }
 tide = "0.16.0"
-async-openai = "0.21.0"
 poise = {version = "0.6.1", features = ["collector"]}
 csv = "1.3.0"
 pickledb = "0.5.1"
