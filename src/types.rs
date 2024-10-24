@@ -11,7 +11,6 @@ pub type AppContext<'a> = poise::ApplicationContext<'a, Data, Error>;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct OptionOpen {
-    pub id: u32,
     pub date: DateTime<Local>,
     pub open_type: String,
     pub ticker: String,
@@ -20,26 +19,22 @@ pub struct OptionOpen {
     pub premium: f64,
     pub quantity: u16,
     pub status: String,
-    pub close_id: Option<u32>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct OptionClose {
-    pub id: u32,
     pub date: DateTime<Local>,
     pub close_type: String,
-    pub open_id: u32,
-    pub roll_id: i32,
     pub premium: f64,
-    pub quantity: u16,
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
-pub struct OptionAssignment {
-    pub id: u32,
-    pub date: DateTime<Local>,
-    pub open_id: u32,
-    pub ticker: String,
-    pub strike: f64,
-    pub quantity: u16,
+pub struct Contract {
+    pub open: OptionOpen,
+    pub close: Option<OptionClose>,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct Position {
+    pub contracts: Vec<Contract>,
 }

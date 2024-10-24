@@ -13,6 +13,7 @@ use std::env;
 
 mod commands;
 mod types;
+mod utils;
 
 #[derive(Debug, serde::Deserialize)]
 struct Record {
@@ -31,7 +32,10 @@ async fn age(
 }
 
 #[poise::command(slash_command, prefix_command)]
-async fn say(ctx: Context<'_>, #[description = "Message to say"] message: String) -> Result<(), Error> {
+async fn say(
+    ctx: Context<'_>,
+    #[description = "Message to say"] message: String,
+) -> Result<(), Error> {
     ctx.say(message).await?;
     Ok(())
 }
@@ -93,13 +97,35 @@ async fn event_handler(
     match event {
         serenity::FullEvent::Ready { data_about_bot, .. } => {
             println!("Logged in as {}", data_about_bot.user.tag());
+
             rustical_message(
                 ctx,
                 data,
-                ChannelId::new(1160065321013620857),
+                ChannelId::new(1160065321013620857), //bot
+                //ChannelId::new(1120455140416172115), //genny
                 env::var("LAPTOP").expect("0"),
             )
             .await?;
+
+            let db_location = "data/test.db";
+            let mut db = match PickleDb::load(
+                db_location,
+                PickleDbDumpPolicy::AutoDump,
+                SerializationMethod::Json,
+            ) {
+                Ok(db) => db,
+                Err(e) => {
+                    //ctx.say("Could not load db").await?;
+                    return Err(Error::from(e.to_string()));
+                }
+            };
+            // // create a new list
+            // db.lcreate("list1")?;
+            // // add a bunch of numbers to the list
+            // db.lextend("list1", &vec![100, 200, 300]).unwrap();
+            // // get the list
+            // let item: i32 = db.lget("list1", db.llen("list1") - 1).unwrap();
+            // //println!("og item: {}", item);
         }
         // me when the
         serenity::FullEvent::Message { new_message } => {
@@ -136,9 +162,9 @@ async fn main() {
         .options(poise::FrameworkOptions {
             commands: vec![
                 age(),
-                commands::modal::modal(),
-                commands::stars::matchup::matchup(),
                 say(),
+                //commands::stars::matchup::matchup(),
+                commands::modal::modal(),
                 commands::add_option_data::open(),
                 commands::add_option_data::close(),
                 commands::add_option_data::expire(),
