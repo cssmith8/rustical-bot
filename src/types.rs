@@ -34,7 +34,26 @@ pub struct Contract {
     pub close: Option<OptionClose>,
 }
 
+impl Contract {
+    pub fn aggregate_premium(&self) -> f64 {
+        match &self.close {
+            Some(close) => self.open.premium - close.premium,
+            None => self.open.premium,
+        }
+    }
+}
+
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Position {
     pub contracts: Vec<Contract>,
+}
+
+impl Position {
+    pub fn aggregate_premium(&self) -> f64 {
+        self.contracts.iter().map(|c| c.aggregate_premium()).sum()
+    }
+
+    pub fn num_rolls(&self) -> usize {
+        self.contracts.len() - 1
+    }
 }

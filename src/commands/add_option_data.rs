@@ -220,3 +220,85 @@ pub async fn expire(ctx: AppContext<'_>) -> Result<(), Error> {
     db.set("edit_id", &-1)?;
     Ok(())
 }
+
+#[derive(Debug, Modal)]
+#[name = "Roll Contract"] // Struct name by default
+pub struct RollModal {
+    #[name = "New Expiration Date"]
+    #[placeholder = "2024-12-30"]
+    #[max_length = 10]
+    exp: String,
+    #[name = "Premium Loss"]
+    #[placeholder = "0.80"]
+    premium_loss: String,
+    #[name = "Premium Gain"]
+    #[placeholder = "0.85"]
+    premium_gain: String,
+    // #[name = "Quantity"]
+    // #[placeholder = "1"]
+    // quantity: String,
+}
+
+#[poise::command(slash_command)]
+pub async fn roll(ctx: AppContext<'_>) -> Result<(), Error> {
+    let userid = ctx.interaction.user.id;
+    let db_location = format!("data/options/{}.db", userid.to_string());
+    let mut db = match open_option_db(db_location.clone()) {
+        Some(db) => db,
+        None => {
+            return Err(Error::from("Could not load db"));
+        }
+    };
+    let edit_id: i32 = db.get("edit_id").unwrap();
+    if edit_id == -1 {
+        ctx.say("No open position selected").await?;
+        return Ok(());
+    }
+    if edit_id >= db.llen("positions") as i32 {
+        ctx.say("Invalid selection").await?;
+        return Ok(());
+    }
+    let mut position: Position = db.lget("positions", edit_id as usize).unwrap();
+
+    let data = match RollModal::execute(ctx).await? {
+        Some(data) => data,
+        None => return Ok(()),
+    };
+
+    let nd = NaiveDate::parse_from_str(&data.exp, "%Y-%m-%d").unwrap();
+    let expiry = Local
+        .with_ymd_and_hms(
+            nd.year_ce().1 as i32,
+            nd.month0() + 1,
+            nd.day0() + 1,
+            0,
+            0,
+            0,
+        )
+        .unwrap();
+    let premium_gain = data.premium_gain.parse::<f64>().unwrap();
+
+    let last_index = position.contracts.len() - 1;
+    position.contracts[last_index].open.status = "rolled".to_string();
+    position.contracts[last_index].close = Some(OptionClose {
+        date: Local::now(),
+        close_type: "roll".to_string(),
+        premium: data.premium_loss.parse::<f64>().unwrap(),
+    });
+    position.contracts.push(Contract {
+        open: OptionOpen {
+            date: Local::now(),
+            open_type: position.contracts[last_index].open.open_type.clone(),
+            ticker: position.contracts[last_index].open.ticker.clone(),
+            strike: position.contracts[last_index].open.strike,
+            expiry,
+            premium: premium_gain,
+            quantity: position.contracts[last_index].open.quantity,
+            status: "open".to_string(),
+        },
+        close: None,
+    });
+    position_list_replace(&mut db, "positions", edit_id as usize, position);
+    ctx.say("Contract Rolled").await?;
+    Ok(())
+}

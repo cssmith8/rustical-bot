@@ -137,15 +137,8 @@ pub async fn view_open(
 }
 
 pub async fn stringify_position(index: u32, length: u32, position: &OpenPosition) -> String {
-    stringify(
-        index,
-        length,
-        &position.pos.contracts[position.pos.contracts.len() - 1].open,
-    )
-    .await
-}
-
-pub async fn stringify(index: u32, length: u32, option: &OptionOpen) -> String {
+    let rolls = position.pos.num_rolls();
+    let option = &position.pos.contracts[position.pos.contracts.len() - 1].open;
     let date: String = option.expiry.month().to_string()
         + "/"
         + &option.expiry.day().to_string()
@@ -164,8 +157,8 @@ pub async fn stringify(index: u32, length: u32, option: &OptionOpen) -> String {
         .unwrap()
         .to_uppercase()
         .collect::<String>();
-    let string = format!(
-        "{}/{}\n# {} {} ${} {}\n*Opened on {}*\nPremium: ${}\nQuantity: {}\n",
+    return format!(
+        "{0}/{1}\n# {2} {3} ${4} {5}\n*Opened on {6}*\nPremium: ${7}\nQuantity: {8}\n",
         index + 1,
         length,
         option.ticker,
@@ -173,10 +166,9 @@ pub async fn stringify(index: u32, length: u32, option: &OptionOpen) -> String {
         option.strike,
         open_type,
         opendate,
-        option.premium,
+        position.pos.aggregate_premium(),
         option.quantity
     );
-    string
 }
 
 pub async fn close_button(ctx: AppContext<'_>, index: usize) -> Result<(), Error> {
