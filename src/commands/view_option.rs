@@ -157,17 +157,20 @@ pub async fn stringify_position(index: u32, length: u32, position: &OpenPosition
         .unwrap()
         .to_uppercase()
         .collect::<String>();
-    return format!(
-        "{0}/{1}\n# {2} {3} ${4} {5}\n*Opened on {6}*\nPremium: ${7}\nQuantity: {8}\n",
-        index + 1,
-        length,
-        option.ticker,
-        date,
-        option.strike,
-        open_type,
+    let index_string = format!("{}/{}", index + 1, length);
+    let title_string = format!(
+        "{} {} ${} {}",
+        option.ticker, date, option.strike, open_type
+    );
+    let info_string = format!(
+        "*Opened on {}*\nPremium: ${}\nQuantity: {}",
         opendate,
         position.pos.aggregate_premium(),
         option.quantity
+    );
+    return format!(
+        "{}\n# {}\n{}\n",
+        index_string, title_string, info_string
     );
 }
 
