@@ -1,5 +1,5 @@
 use crate::types::{AppContext, Error};
-use crate::types::{OptionOpen, Position};
+use crate::types::Position;
 use crate::utils::{get_position_status, open_option_db};
 use chrono::Datelike;
 use poise::serenity_prelude::{self as serenity, Colour};
@@ -158,6 +158,11 @@ pub async fn stringify_position(index: u32, length: u32, position: &OpenPosition
         .to_uppercase()
         .collect::<String>();
     let index_string = format!("{}/{}", index + 1, length);
+    let rolls_string = if rolls > 0 {
+        format!("-# *Rolled {} times*\n", rolls)
+    } else {
+        "".to_string()
+    };
     let title_string = format!(
         "{} {} ${} {}",
         option.ticker, date, option.strike, open_type
@@ -169,8 +174,7 @@ pub async fn stringify_position(index: u32, length: u32, position: &OpenPosition
         option.quantity
     );
     return format!(
-        "{}\n# {}\n{}\n",
-        index_string, title_string, info_string
+        "-# {index_string}\n# {title_string}\n{rolls_string}{info_string}\n"
     );
 }
 
