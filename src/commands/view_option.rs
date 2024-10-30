@@ -1,4 +1,4 @@
-use crate::types::{AppContext, Error};
+use crate::types::{AppContext, Contract, Error};
 use crate::types::Position;
 use crate::utils::{get_position_status, open_option_db};
 use chrono::Datelike;
@@ -44,6 +44,100 @@ pub async fn view(ctx: AppContext<'_>) -> Result<(), Error> {
     }
 
     view_open(ctx, open_positions).await?;
+
+    Ok(())
+}
+
+#[poise::command(slash_command)]
+pub async fn details(ctx: AppContext<'_>) -> Result<(), Error> {
+    let userid = ctx.interaction.user.id;
+    let db_location = format!("data/options/{}.db", userid.to_string());
+    let db = match open_option_db(db_location.clone()) {
+        Some(db) => db,
+        None => {
+            return Err(Error::from("Could not load db"));
+        }
+    };
+    let edit_id: i32 = db.get("edit_id").unwrap();
+    if edit_id == -1 {
+        ctx.say("No open position selected").await?;
+        return Ok(());
+    }
+    if edit_id >= db.llen("positions") as i32 {
+        ctx.say("Invalid selection").await?;
+        return Ok(());
+    }
+    let position: Position = db.lget("positions", edit_id as usize).unwrap();
+
+    view_contracts(ctx, &position.contracts).await?;
+
+    Ok(())
+}
+
+pub async fn view_contracts(
+    ctx: AppContext<'_>,
+    contracts: &Vec<Contract>,
+) -> Result<(), serenity::Error> {
+    let ctx_id = ctx.id();
+    let prev_button_id = format!("{}prev", ctx_id);
+    let next_button_id = format!("{}next", ctx_id);
+
+    let reply = {
+        let components = serenity::CreateActionRow::Buttons(vec![
+            serenity::CreateButton::new(&prev_button_id).emoji('◀'),
+            serenity::CreateButton::new(&next_button_id).emoji('▶'),
+        ]);
+
+        poise::CreateReply::default()
+            .embed(
+                serenity::CreateEmbed::default()
+                    .description(stringify_contract(0, contracts.len() as u32, &contracts[0]).await),
+            )
+            .components(vec![components])
+    };
+
+    ctx.send(reply).await?;
+
+    let mut current_page = 0;
+    while let Some(press) = serenity::collector::ComponentInteractionCollector::new(ctx)
+        .filter(move |press| press.data.custom_id.starts_with(&ctx_id.to_string()))
+        .timeout(std::time::Duration::from_secs(3600 * 24))
+        .await
+    {
+        if press.user.id != ctx.interaction.user.id {
+            ctx.say("Cannot view another user's contract").await?;
+            continue;
+        }
+
+        if press.data.custom_id == next_button_id {
+            current_page += 1;
+            if current_page >= contracts.len() {
+                current_page = 0;
+            }
+        } else if press.data.custom_id == prev_button_id {
+            current_page = current_page.checked_sub(1).unwrap_or(contracts.len() - 1);
+        } else {
+            continue;
+        }
+
+        press
+            .create_response(
+                ctx.serenity_context(),
+                serenity::CreateInteractionResponse::UpdateMessage(
+                    serenity::CreateInteractionResponseMessage::new().embed(
+                        serenity::CreateEmbed::new().description(
+                            stringify_contract(
+                                current_page as u32,
+                                contracts.len() as u32,
+                                &contracts[current_page],
+                            )
+                            .await,
+                        ),
+                    ),
+                ),
+            )
+            .await?;
+    }
 
     Ok(())
 }
@@ -176,6 +270,30 @@ pub async fn stringify_position(index: u32, length: u32, position: &OpenPosition
     return format!(
         "-# {index_string}\n# {title_string}\n{rolls_string}{info_string}\n"
     );
+}
+
+pub async fn stringify_contract(index: u32, length: u32, contract: &Contract) -> String {
+    let open = &contract.open;
+    let close = &contract.close;
+    let open_date = format!("{}/{}/{}", open.date.month(), open.date.day(), open.date.year() % 100);
+    let expiry_date = format!("{}/{}/{}", open.expiry.month(), open.expiry.day(), open.expiry.year() % 100);
+    let close_info = match close {
+        Some(c) => format!("Closed on {}/{}/{} with premium ${}", c.date.month(), c.date.day(), c.date.year() % 100, c.premium),
+        None => "Still open".to_string(),
+    };
+    format!(
+        "**Contract {}/{}**\n\
+        - **Opened on:** {}\n\
+        - **Expiry:** {}\n\
+        - **Type:** {}\n\
+        - **Ticker:** {}\n\
+        - **Strike:** ${}\n\
+        - **Premium:** ${}\n\
+        - **Quantity:** {}\n\
+        - **Status:** {}\n\
+        - **{}**\n",
+        index + 1, length, open_date, expiry_date, open.open_type, open.ticker, open.strike, open.premium, open.quantity, open.status, close_info
+    )
 }
 
 pub async fn close_button(ctx: AppContext<'_>, index: usize) -> Result<(), Error> {

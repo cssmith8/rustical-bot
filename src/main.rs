@@ -173,6 +173,7 @@ async fn main() {
                 commands::edit_option_data::edit(),
                 commands::edit_option_data::date(),
                 commands::view_option::view(),
+                commands::view_option::details(),
             ],
             event_handler: |ctx, event, framework, data| {
                 Box::pin(event_handler(ctx, event, framework, data))
