@@ -56,4 +56,32 @@ impl Position {
     pub fn num_rolls(&self) -> usize {
         self.contracts.len() - 1
     }
+
+    pub fn time(&self) -> chrono::Duration {
+        //for each contract
+        let mut time = chrono::Duration::zero();
+        for contract in &self.contracts {
+            //if the contract is closed
+            if let Some(close) = &contract.close {
+                //return the time between the open and close
+                time += close.date.signed_duration_since(contract.open.date);
+            } else {
+                //if the contract is open, return the time between the open and now
+                time += Local::now().signed_duration_since(contract.open.date);
+            }
+        }
+        time
+    }
+
+    pub fn investment(&self) -> f64 {
+        if self.contracts.len() == 0 {
+            print!("Error: Empty position");
+            return 0.0;
+        }
+        self.contracts[0].open.strike * self.contracts[0].open.quantity as f64 * 100.0
+    }
+
+    pub fn return_on_investment(&self) -> f64 {
+        self.aggregate_premium() / self.investment()
+    }
 }
