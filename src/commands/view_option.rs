@@ -83,20 +83,27 @@ pub async fn view_contracts(
     let next_button_id = format!("{}next", ctx_id);
 
     let reply = {
-        let components = serenity::CreateActionRow::Buttons(vec![
-            serenity::CreateButton::new(&prev_button_id).emoji('◀'),
-            serenity::CreateButton::new(&next_button_id).emoji('▶'),
-        ]);
+        let mut components = vec![];
+        if contracts.len() > 1 {
+            components.push(serenity::CreateActionRow::Buttons(vec![
+                serenity::CreateButton::new(&prev_button_id).emoji('◀'),
+                serenity::CreateButton::new(&next_button_id).emoji('▶'),
+            ]));
+        }
 
         poise::CreateReply::default()
             .embed(
                 serenity::CreateEmbed::default()
                     .description(stringify_contract(0, contracts.len() as u32, &contracts[0]).await),
             )
-            .components(vec![components])
+            .components(components)
     };
 
     ctx.send(reply).await?;
+
+    if contracts.len() <= 1 {
+        return Ok(());
+    }
 
     let mut current_page = 0;
     while let Some(press) = serenity::collector::ComponentInteractionCollector::new(ctx)
@@ -282,17 +289,13 @@ pub async fn stringify_contract(index: u32, length: u32, contract: &Contract) ->
         None => "Still open".to_string(),
     };
     format!(
-        "**Contract {}/{}**\n\
-        - **Opened on:** {}\n\
-        - **Expiry:** {}\n\
-        - **Type:** {}\n\
-        - **Ticker:** {}\n\
-        - **Strike:** ${}\n\
-        - **Premium:** ${}\n\
-        - **Quantity:** {}\n\
-        - **Status:** {}\n\
-        - **{}**\n",
-        index + 1, length, open_date, expiry_date, open.open_type, open.ticker, open.strike, open.premium, open.quantity, open.status, close_info
+        "Contract {}/{}\n\
+        {} {} ${} {}\n\
+        Premium: ${}\n\
+        Quantity: {}\n\
+        Opened on: {}\n\
+        Status: {}",
+        index + 1, length, open.ticker, expiry_date, open.strike, open.open_type, open.premium, open.quantity, open_date, close_info
     )
 }
 
