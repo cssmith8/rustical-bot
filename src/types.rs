@@ -49,15 +49,28 @@ pub struct Position {
 }
 
 impl Position {
+
+    pub fn is_closed(&self) -> bool {
+        for contract in &self.contracts {
+            if contract.close.is_none() {
+                return false;
+            }
+        }
+        true
+    }
     pub fn aggregate_premium(&self) -> f64 {
         self.contracts.iter().map(|c| c.aggregate_premium()).sum()
+    }
+
+    pub fn gain(&self) -> f64 {
+        self.aggregate_premium() * self.contracts[0].open.quantity as f64 * 100.0
     }
 
     pub fn num_rolls(&self) -> usize {
         self.contracts.len() - 1
     }
 
-    pub fn time(&self) -> chrono::Duration {
+    pub fn time(&self) -> i64 {
         //for each contract
         let mut time = chrono::Duration::zero();
         for contract in &self.contracts {
@@ -70,7 +83,10 @@ impl Position {
                 time += Local::now().signed_duration_since(contract.open.date);
             }
         }
-        time
+        if time.num_days() < 1 {
+            return 1;   
+        }
+        time.num_days()
     }
 
     pub fn investment(&self) -> f64 {
@@ -82,6 +98,6 @@ impl Position {
     }
 
     pub fn return_on_investment(&self) -> f64 {
-        self.aggregate_premium() / self.investment()
+        self.gain() / self.investment()
     }
 }

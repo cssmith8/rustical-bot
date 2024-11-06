@@ -175,6 +175,7 @@ async fn main() {
                 commands::view_option::view(),
                 commands::view_option::details(),
                 commands::query_option::stats(),
+                commands::query_option::best(),
             ],
             event_handler: |ctx, event, framework, data| {
                 Box::pin(event_handler(ctx, event, framework, data))
