@@ -182,7 +182,7 @@ pub async fn assign(ctx: AppContext<'_>) -> Result<(), Error> {
     let ticker = position.contracts[last_index].open.ticker.clone();
     position_list_replace(&mut db, "positions", edit_id as usize, position);
 
-    ctx.say(format!("Assigned {} shares of {}", q, ticker))
+    ctx.say(format!("Assigned {} shares of {}", q * 100, ticker))
         .await?;
 
     db.set("edit_id", &-1)?;
@@ -234,9 +234,9 @@ pub struct RollModal {
     #[name = "Premium Gain"]
     #[placeholder = "0.85"]
     premium_gain: String,
-    // #[name = "Quantity"]
-    // #[placeholder = "1"]
-    // quantity: String,
+    #[name = "New Strike Price (Leave blank if unchanged)"]
+    #[placeholder = "15"]
+    strike: Option<String>,
 }
 
 #[poise::command(slash_command)]
@@ -285,12 +285,18 @@ pub async fn roll(ctx: AppContext<'_>) -> Result<(), Error> {
         close_type: "roll".to_string(),
         premium: data.premium_loss.parse::<f64>().unwrap(),
     });
+
+    let strike = match data.strike {
+        Some(s) => s.parse::<f64>().unwrap(),
+        None => position.contracts[last_index].open.strike,
+    };
+
     position.contracts.push(Contract {
         open: OptionOpen {
             date: Local::now(),
             open_type: position.contracts[last_index].open.open_type.clone(),
             ticker: position.contracts[last_index].open.ticker.clone(),
-            strike: position.contracts[last_index].open.strike,
+            strike: strike,
             expiry,
             premium: premium_gain,
             quantity: position.contracts[last_index].open.quantity,

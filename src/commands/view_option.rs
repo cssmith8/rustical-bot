@@ -1,5 +1,5 @@
-use crate::types::{AppContext, Contract, Error};
 use crate::types::Position;
+use crate::types::{AppContext, Contract, Error};
 use crate::utils::{get_position_status, open_option_db};
 use chrono::Datelike;
 use poise::serenity_prelude::{self as serenity, Colour};
@@ -82,22 +82,22 @@ pub async fn view_contracts(
     let prev_button_id = format!("{}prev", ctx_id);
     let next_button_id = format!("{}next", ctx_id);
 
-    let reply = {
-        let mut components = vec![];
-        if contracts.len() > 1 {
-            components.push(serenity::CreateActionRow::Buttons(vec![
-                serenity::CreateButton::new(&prev_button_id).emoji('◀'),
-                serenity::CreateButton::new(&next_button_id).emoji('▶'),
-            ]));
-        }
+    let reply =
+        {
+            let mut components = vec![];
+            if contracts.len() > 1 {
+                components.push(serenity::CreateActionRow::Buttons(vec![
+                    serenity::CreateButton::new(&prev_button_id).emoji('◀'),
+                    serenity::CreateButton::new(&next_button_id).emoji('▶'),
+                ]));
+            }
 
-        poise::CreateReply::default()
-            .embed(
-                serenity::CreateEmbed::default()
-                    .description(stringify_contract(0, contracts.len() as u32, &contracts[0]).await),
-            )
-            .components(components)
-    };
+            poise::CreateReply::default()
+                .embed(serenity::CreateEmbed::default().description(
+                    stringify_contract(0, contracts.len() as u32, &contracts[0]).await,
+                ))
+                .components(components)
+        };
 
     ctx.send(reply).await?;
 
@@ -274,18 +274,32 @@ pub async fn stringify_position(index: u32, length: u32, position: &OpenPosition
         position.pos.aggregate_premium(),
         option.quantity
     );
-    return format!(
-        "-# {index_string}\n# {title_string}\n{rolls_string}{info_string}\n"
-    );
+    return format!("-# {index_string}\n# {title_string}\n{rolls_string}{info_string}\n");
 }
 
 pub async fn stringify_contract(index: u32, length: u32, contract: &Contract) -> String {
     let open = &contract.open;
     let close = &contract.close;
-    let open_date = format!("{}/{}/{}", open.date.month(), open.date.day(), open.date.year() % 100);
-    let expiry_date = format!("{}/{}/{}", open.expiry.month(), open.expiry.day(), open.expiry.year() % 100);
+    let open_date = format!(
+        "{}/{}/{}",
+        open.date.month(),
+        open.date.day(),
+        open.date.year() % 100
+    );
+    let expiry_date = format!(
+        "{}/{}/{}",
+        open.expiry.month(),
+        open.expiry.day(),
+        open.expiry.year() % 100
+    );
     let close_info = match close {
-        Some(c) => format!("Closed on {}/{}/{} with premium ${}", c.date.month(), c.date.day(), c.date.year() % 100, c.premium),
+        Some(c) => format!(
+            "Closed on {}/{}/{} at premium ${}",
+            c.date.month(),
+            c.date.day(),
+            c.date.year() % 100,
+            c.premium
+        ),
         None => "Still open".to_string(),
     };
     format!(
@@ -295,7 +309,16 @@ pub async fn stringify_contract(index: u32, length: u32, contract: &Contract) ->
         Quantity: {}\n\
         Opened on: {}\n\
         Status: {}",
-        index + 1, length, open.ticker, expiry_date, open.strike, open.open_type, open.premium, open.quantity, open_date, close_info
+        index + 1,
+        length,
+        open.ticker,
+        expiry_date,
+        open.strike,
+        open.open_type,
+        open.premium,
+        open.quantity,
+        open_date,
+        close_info
     )
 }
 

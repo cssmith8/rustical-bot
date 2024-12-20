@@ -45,9 +45,15 @@ pub fn position_list_replace(db: &mut PickleDb, name: &str, index: usize, positi
 
 //function to check the status of the last option open in a position
 pub fn get_position_status(position: Position) -> String {
-    let last_index = position.contracts.len() - 1;
-    let open_status = position.contracts[last_index].open.status.clone();
-    open_status
+    position.contracts[position.contracts.len() - 1]
+        .open
+        .status
+        .clone()
+}
+
+//function to display a float as a string with 2 decimal places and a dollar sign
+pub fn display_dollars(amount: f64) -> String {
+    format!("${:.2}", amount)
 }
 
 // pub fn int_list_replace(db: &mut PickleDb, name: &str, index: usize, position: i32) {

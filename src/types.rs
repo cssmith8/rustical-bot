@@ -49,7 +49,6 @@ pub struct Position {
 }
 
 impl Position {
-
     pub fn is_closed(&self) -> bool {
         for contract in &self.contracts {
             if contract.close.is_none() {
@@ -84,7 +83,7 @@ impl Position {
             }
         }
         if time.num_days() < 1 {
-            return 1;   
+            return 1;
         }
         time.num_days()
     }

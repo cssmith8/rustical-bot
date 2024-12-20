@@ -164,7 +164,7 @@ async fn main() {
                 age(),
                 say(),
                 //commands::stars::matchup::matchup(),
-                commands::modal::modal(),
+                //commands::modal::modal(),
                 commands::add_option_data::open(),
                 commands::add_option_data::close(),
                 commands::add_option_data::expire(),
