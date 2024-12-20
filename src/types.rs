@@ -41,6 +41,48 @@ impl Contract {
             None => self.open.premium,
         }
     }
+
+    pub async fn display(&self) -> String {
+        let open = &self.open;
+        let close = &self.close;
+        let open_date = format!(
+            "{}/{}/{}",
+            open.date.month(),
+            open.date.day(),
+            open.date.year() % 100
+        );
+        let expiry_date = format!(
+            "{}/{}/{}",
+            open.expiry.month(),
+            open.expiry.day(),
+            open.expiry.year() % 100
+        );
+        let close_info = match close {
+            Some(c) => format!(
+                "Closed on {}/{}/{} at premium ${}",
+                c.date.month(),
+                c.date.day(),
+                c.date.year() % 100,
+                c.premium
+            ),
+            None => "Still open".to_string(),
+        };
+        format!(
+            "{} {} ${} {}\n\
+            Premium: ${}\n\
+            Quantity: {}\n\
+            Opened on: {}\n\
+            Status: {}",
+            open.ticker,
+            expiry_date,
+            open.strike,
+            open.open_type,
+            open.premium,
+            open.quantity,
+            open_date,
+            close_info
+        )
+    }
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -98,5 +140,48 @@ impl Position {
 
     pub fn return_on_investment(&self) -> f64 {
         self.gain() / self.investment()
+    }
+
+    pub fn get_status(&self) -> String {
+        self.contracts[self.contracts.len() - 1].open.status.clone()
+    }
+
+    pub fn display(&self) -> String {
+        let rolls = self.num_rolls();
+        let option = &self.contracts[self.contracts.len() - 1].open;
+        let date: String = option.expiry.month().to_string()
+            + "/"
+            + &option.expiry.day().to_string()
+            + "/"
+            + &(option.expiry.year() % 100).to_string();
+        let opendate: String = option.date.month().to_string()
+            + "/"
+            + &option.date.day().to_string()
+            + "/"
+            + &(option.date.year() % 100).to_string();
+        //capitalize the open type first letter
+        let open_type = option
+            .open_type
+            .chars()
+            .next()
+            .unwrap()
+            .to_uppercase()
+            .collect::<String>();
+        let rolls_string = if rolls > 0 {
+            format!("-# *Rolled {} times*\n", rolls)
+        } else {
+            "".to_string()
+        };
+        let title_string = format!(
+            "{} {} ${} {}",
+            option.ticker, date, option.strike, open_type
+        );
+        let info_string = format!(
+            "*Opened on {}*\nPremium: ${}\nQuantity: {}",
+            opendate,
+            self.aggregate_premium(),
+            option.quantity
+        );
+        return format!("# {title_string}\n{rolls_string}{info_string}\n");
     }
 }
