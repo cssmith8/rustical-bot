@@ -100,7 +100,7 @@ impl Position {
         true
     }
     pub fn aggregate_premium(&self) -> f64 {
-        self.contracts.iter().map(|c| c.aggregate_premium()).sum()
+        (self.contracts.iter().map(|c| c.aggregate_premium()).sum::<f64>() * 100.0).round() / 100.0
     }
 
     pub fn gain(&self) -> f64 {
