@@ -4,6 +4,7 @@ use pickledb::{PickleDb, PickleDbDumpPolicy, SerializationMethod};
 use poise::serenity_prelude as serenity;
 use serenity::model::id::ChannelId;
 use serenity::prelude::*;
+use anyhow::Result;
 use serenity::{
     //model::prelude::{Message, Ready},
     Client,
@@ -144,7 +145,7 @@ async fn event_handler(
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), anyhow::Error> {
     dotenv::dotenv().ok();
     let token = env::var("DISCORD_TOKEN").expect("Expected discord token env");
 
@@ -198,7 +199,9 @@ async fn main() {
         .await
         .expect("Could not create client");
 
-    if let Err(e) = client.start().await {
+    if let Err(e) = client.start().await.map_err(anyhow::Error::from) {
         println!("Client error: {}", e.to_string());
+        return Err(e);
     }
+    Ok(())
 }

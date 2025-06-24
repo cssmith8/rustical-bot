@@ -2,6 +2,7 @@ use crate::types::{AppContext, Error};
 use crate::types::{Contract, OptionClose, OptionOpen, Position};
 use crate::utils::{open_option_db, position_list_replace};
 use chrono::prelude::*;
+use anyhow::Result;
 use poise::Modal;
 
 #[derive(Debug, Modal)]
@@ -9,7 +10,7 @@ use poise::Modal;
 pub struct OpenModal {
     #[name = "Stock Ticker"] // Field name by default
     #[placeholder = "AMZN"] // No placeholder by default
-    #[min_length = 2] // No length restriction by default (so, 1-4000 chars)
+    #[min_length = 1] // No length restriction by default (so, 1-4000 chars)
     #[max_length = 16]
     //#[paragraph] // Switches from single-line input to multiline text box
     ticker: String,
@@ -44,20 +45,21 @@ pub async fn open(
         Some(data) => {
             //get modal info
             let date = Local::now();
-            let strike = data.strike.parse::<f64>().unwrap();
-            let nd = NaiveDate::parse_from_str(&data.exp, "%Y-%m-%d").unwrap();
-            let expiry = Local
-                .with_ymd_and_hms(
-                    nd.year_ce().1 as i32,
-                    nd.month0() + 1,
-                    nd.day0() + 1,
-                    0,
-                    0,
-                    0,
-                )
-                .unwrap();
-            let premium = data.premium.parse::<f64>().unwrap();
-            let quantity = data.quantity.parse::<u16>().unwrap();
+            let strike = data.strike.parse::<f64>()?;
+            let nd = NaiveDate::parse_from_str(&data.exp, "%Y-%m-%d")?;
+            let expiry = match Local.with_ymd_and_hms(
+                nd.year_ce().1 as i32,
+                nd.month0() + 1,
+                nd.day0() + 1,
+                0,
+                0,
+                0,
+            ) {
+                chrono::LocalResult::Single(datetime) => datetime,
+                _ => return Err(Error::from("Invalid date")),
+            };
+            let premium = data.premium.parse::<f64>()?;
+            let quantity = data.quantity.parse::<u16>()?;
 
             let status = "open".to_string();
             //add the open contract to the database
@@ -86,7 +88,7 @@ pub async fn open(
                     }],
                 },
             )
-            .unwrap();
+            .ok_or_else(|| Error::from("Failed to add position to database"))?;
             ctx.say("Contract Opened").await?;
         }
         None => return Ok(()),
@@ -116,7 +118,13 @@ pub async fn close(ctx: AppContext<'_>) -> Result<(), Error> {
             return Err(Error::from("Could not load db"));
         }
     };
-    let edit_id: i32 = db.get("edit_id").unwrap();
+    let edit_id: i32 = match db.get("edit_id") {
+        Some(id) => id,
+        None => {
+            ctx.say("Failed to retrieve edit_id").await?;
+            return Ok(());
+        }
+    };
     if edit_id == -1 {
         ctx.say("No open position selected").await?;
         return Ok(());
@@ -131,16 +139,22 @@ pub async fn close(ctx: AppContext<'_>) -> Result<(), Error> {
         None => return Ok(()),
     };
     //get the position at index edit_id
-    let mut position: Position = db.lget("positions", edit_id as usize).unwrap();
+    let mut position: Position = match db.lget("positions", edit_id as usize) {
+        Some(pos) => pos,
+        None => {
+            ctx.say("Failed to retrieve position").await?;
+            return Ok(());
+        }
+    };
     let last_index = position.contracts.len() - 1;
     position.contracts[last_index].close = Some(OptionClose {
         date: Local::now(),
         close_type: "close".to_string(),
-        premium: data.premium.parse::<f64>().unwrap(),
+        premium: data.premium.parse::<f64>()?,
     });
     position.contracts[last_index].open.status = "closed".to_string();
     let gain: f64 = (position.contracts[last_index].open.premium
-        - data.premium.parse::<f64>().unwrap())
+        - data.premium.parse::<f64>()?)
         * (position.contracts[last_index].open.quantity as f64)
         * 100 as f64;
     position_list_replace(&mut db, "positions", edit_id as usize, position);
@@ -165,7 +179,13 @@ pub async fn assign(ctx: AppContext<'_>) -> Result<(), Error> {
             return Err(Error::from("Could not load db"));
         }
     };
-    let edit_id: i32 = db.get("edit_id").unwrap();
+    let edit_id: i32 = match db.get("edit_id") {
+        Some(id) => id,
+        None => {
+            ctx.say("Failed to retrieve edit_id").await?;
+            return Ok(());
+        }
+    };
     if edit_id == -1 {
         ctx.say("No open position selected").await?;
         return Ok(());
@@ -175,7 +195,13 @@ pub async fn assign(ctx: AppContext<'_>) -> Result<(), Error> {
         return Ok(());
     }
     //get the position at index edit_id
-    let mut position: Position = db.lget("positions", edit_id as usize).unwrap();
+    let mut position: Position = match db.lget("positions", edit_id as usize) {
+        Some(pos) => pos,
+        None => {
+            ctx.say("Failed to retrieve position").await?;
+            return Ok(());
+        }
+    };
     let last_index = position.contracts.len() - 1;
     position.contracts[last_index].open.status = "assigned".to_string();
     let q = position.contracts[last_index].open.quantity;
@@ -200,7 +226,13 @@ pub async fn expire(ctx: AppContext<'_>) -> Result<(), Error> {
             return Err(Error::from("Could not load db"));
         }
     };
-    let edit_id: i32 = db.get("edit_id").unwrap();
+    let edit_id: i32 = match db.get("edit_id") {
+        Some(id) => id,
+        None => {
+            ctx.say("Failed to retrieve edit_id").await?;
+            return Ok(());
+        }
+    };
     if edit_id == -1 {
         ctx.say("No open position selected").await?;
         return Ok(());
@@ -210,7 +242,13 @@ pub async fn expire(ctx: AppContext<'_>) -> Result<(), Error> {
         return Ok(());
     }
     //get the position at index edit_id
-    let mut position: Position = db.lget("positions", edit_id as usize).unwrap();
+    let mut position: Position = match db.lget("positions", edit_id as usize) {
+        Some(pos) => pos,
+        None => {
+            ctx.say("Failed to retrieve position").await?;
+            return Ok(());
+        }
+    };
     let last_index = position.contracts.len() - 1;
     position.contracts[last_index].open.status = "expired".to_string();
     position_list_replace(&mut db, "positions", edit_id as usize, position);
@@ -249,7 +287,13 @@ pub async fn roll(ctx: AppContext<'_>) -> Result<(), Error> {
             return Err(Error::from("Could not load db"));
         }
     };
-    let edit_id: i32 = db.get("edit_id").unwrap();
+    let edit_id: i32 = match db.get("edit_id") {
+        Some(id) => id,
+        None => {
+            ctx.say("Failed to retrieve edit_id").await?;
+            return Ok(());
+        }
+    };
     if edit_id == -1 {
         ctx.say("No open position selected").await?;
         return Ok(());
@@ -258,36 +302,43 @@ pub async fn roll(ctx: AppContext<'_>) -> Result<(), Error> {
         ctx.say("Invalid selection").await?;
         return Ok(());
     }
-    let mut position: Position = db.lget("positions", edit_id as usize).unwrap();
+    let mut position: Position = match db.lget("positions", edit_id as usize) {
+        Some(pos) => pos,
+        None => {
+            ctx.say("Failed to retrieve position").await?;
+            return Ok(());
+        }
+    };
 
     let data = match RollModal::execute(ctx).await? {
         Some(data) => data,
         None => return Ok(()),
     };
 
-    let nd = NaiveDate::parse_from_str(&data.exp, "%Y-%m-%d").unwrap();
-    let expiry = Local
-        .with_ymd_and_hms(
-            nd.year_ce().1 as i32,
-            nd.month0() + 1,
-            nd.day0() + 1,
-            0,
-            0,
-            0,
-        )
-        .unwrap();
-    let premium_gain = data.premium_gain.parse::<f64>().unwrap();
+    let nd = NaiveDate::parse_from_str(&data.exp, "%Y-%m-%d")?;
+    let expiry = match Local.with_ymd_and_hms(
+        nd.year_ce().1 as i32,
+        nd.month0() + 1,
+        nd.day0() + 1,
+        0,
+        0,
+        0,
+    ) {
+        chrono::LocalResult::Single(datetime) => datetime,
+        _ => return Err(Error::from("Invalid date")),
+    };
+    let premium_gain = data.premium_gain.parse::<f64>()?;
 
     let last_index = position.contracts.len() - 1;
     position.contracts[last_index].open.status = "rolled".to_string();
     position.contracts[last_index].close = Some(OptionClose {
         date: Local::now(),
         close_type: "roll".to_string(),
-        premium: data.premium_loss.parse::<f64>().unwrap(),
+        premium: data.premium_loss.parse::<f64>()?,
     });
 
     let strike = match data.strike {
-        Some(s) => s.parse::<f64>().unwrap(),
+        Some(s) => s.parse::<f64>()?,
         None => position.contracts[last_index].open.strike,
     };
 
