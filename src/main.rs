@@ -170,6 +170,7 @@ async fn main() -> Result<(), anyhow::Error> {
                 commands::options::add::close::close(),
                 commands::options::add::expire::expire(),
                 commands::options::add::assign::assign(),
+                commands::options::add::split::split(),
                 commands::options::add::roll::roll(),
                 commands::options::edit::edit::edit(),
                 commands::options::edit::date::date(),

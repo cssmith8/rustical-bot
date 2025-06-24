@@ -62,10 +62,7 @@ pub async fn close(ctx: AppContext<'_>) -> Result<(), Error> {
         premium: data.premium.parse::<f64>()?,
     });
     position.contracts[last_index].open.status = "closed".to_string();
-    let gain: f64 = (position.contracts[last_index].open.premium
-        - data.premium.parse::<f64>()?)
-        * (position.contracts[last_index].open.quantity as f64)
-        * 100 as f64;
+    let gain: f64 = position.gain();
     position_list_replace(&mut db, "positions", edit_id as usize, position);
     let money_mouth = if gain > 0.0 { ":money_mouth:" } else { "" };
     ctx.say(format!(

@@ -2,7 +2,7 @@ use crate::types::{AppContext, Error, Position};
 use crate::utils::{label_display, open_option_db};
 use poise::serenity_prelude::{self as serenity, Colour};
 
-const SELECT_TEXT: &str = "**Position Selected**\n> Use `/close` to close the position\n> Use `/roll` to roll the position\n> Use `/expire` if the option expired\n> Use `/assign` if the option was assigned\n> Use `/edit` to edit position info\n> Use `/date` to change open date";
+const SELECT_TEXT: &str = "**Position Selected**\n> Use `/close` to close the position\n> Use `/roll` to roll the position\n> Use `/expire` if the option expired\n> Use `/assign` if the option was assigned\n\n> Use `/edit` to edit position info\n> Use `/date` to change open date\n> Use `/split` to split the position\n\n> Use `/details` to view contract details";
 
 pub struct OpenPosition {
     id: usize,

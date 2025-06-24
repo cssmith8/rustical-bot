@@ -35,6 +35,27 @@ pub struct Contract {
 }
 
 impl Contract {
+
+    pub fn clone(&self) -> Contract {
+        Contract {
+            open: OptionOpen {
+                date: self.open.date,
+                open_type: self.open.open_type.clone(),
+                ticker: self.open.ticker.clone(),
+                strike: self.open.strike,
+                expiry: self.open.expiry,
+                premium: self.open.premium,
+                quantity: self.open.quantity,
+                status: self.open.status.clone(),
+            },
+            close: self.close.as_ref().map(|c| OptionClose {
+                date: c.date,
+                close_type: c.close_type.clone(),
+                premium: c.premium,
+            }),
+        }
+    }
+
     pub fn aggregate_premium(&self) -> f64 {
         match &self.close {
             Some(close) => self.open.premium - close.premium,
@@ -91,6 +112,13 @@ pub struct Position {
 }
 
 impl Position {
+
+    pub fn clone(&self) -> Position {
+        Position {
+            contracts: self.contracts.iter().map(|c| c.clone()).collect(),
+        }
+    }
+
     pub fn is_closed(&self) -> bool {
         for contract in &self.contracts {
             if contract.close.is_none() {
