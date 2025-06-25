@@ -187,6 +187,8 @@ impl Position {
             + &option.date.day().to_string()
             + "/"
             + &(option.date.year() % 100).to_string();
+        let unixexpirytime = option.expiry.timestamp();
+        let unixopentime = option.date.timestamp();
         //capitalize the open type first letter
         let open_type = option
             .open_type
@@ -205,7 +207,9 @@ impl Position {
             option.ticker, date, option.strike, open_type
         );
         let info_string = format!(
-            "*Opened on {}*\nPremium: ${}\nQuantity: {}",
+            "Expires <t:{}:R>\nOpened <t:{}:R> ({})\nPremium: ${}\nQuantity: {}",
+            unixexpirytime,
+            unixopentime,
             opendate,
             self.aggregate_premium(),
             option.quantity
