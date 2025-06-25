@@ -66,7 +66,7 @@ pub async fn close(ctx: AppContext<'_>) -> Result<(), Error> {
     position_list_replace(&mut db, "positions", edit_id as usize, position);
     let money_mouth = if gain > 0.0 { ":money_mouth:" } else { "" };
     ctx.say(format!(
-        "Contract Closed. You made ${} {}",
+        "Contract Closed. You made ${:.2} {}",
         gain, money_mouth
     ))
     .await?;

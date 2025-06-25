@@ -127,12 +127,9 @@ impl Position {
     }
 
     pub fn is_closed(&self) -> bool {
-        for contract in &self.contracts {
-            if contract.close.is_none() {
-                return false;
-            }
-        }
-        true
+        let final_contract = self.final_contract();
+        final_contract.close.is_some()
+            || matches!(final_contract.open.status.as_str(), "assigned" | "expired")
     }
 
     pub fn final_contract(&self) -> &Contract {
