@@ -148,6 +148,10 @@ impl Position {
         self.contracts.len() - 1
     }
 
+    pub fn status(&self) -> String {
+        self.final_contract().open.status.clone()
+    }
+
     pub fn time(&self) -> i64 {
         //for each contract
         let mut time = chrono::Duration::zero();
@@ -191,13 +195,18 @@ impl Position {
             + &option.expiry.day().to_string()
             + "/"
             + &(option.expiry.year() % 100).to_string();
-        let opendate: String = option.date.month().to_string()
+        let open_date: String = option.date.month().to_string()
             + "/"
             + &option.date.day().to_string()
             + "/"
             + &(option.date.year() % 100).to_string();
-        let unixexpirytime = option.expiry.timestamp();
-        let unixopentime = option.date.timestamp();
+        let unix_expiry_time = option.expiry.timestamp();
+        let unix_open_time = option.date.timestamp();
+        let expire_format = if option.expiry > Utc::now() {
+            "Expires".to_string()
+        } else {
+            "Expired".to_string()
+        };
         //capitalize the open type first letter
         let open_type = option
             .open_type
@@ -207,7 +216,8 @@ impl Position {
             .to_uppercase()
             .collect::<String>();
         let rolls_string = if rolls > 0 {
-            format!("-# *Rolled {} times*\n", rolls)
+            let times_str = if rolls == 1 { "time" } else { "times" };
+            format!("-# *Rolled {} {}*\n", rolls, times_str)
         } else {
             "".to_string()
         };
@@ -216,10 +226,11 @@ impl Position {
             option.ticker, date, option.strike, open_type
         );
         let info_string = format!(
-            "Expires <t:{}:R>\nOpened <t:{}:R> ({})\nPremium: ${}\nQuantity: {}",
-            unixexpirytime,
-            unixopentime,
-            opendate,
+            "Opened <t:{}:R> ({})\n{} <t:{}:R>\nPremium: ${}\nQuantity: {}",
+            unix_open_time,
+            open_date,
+            expire_format,
+            unix_expiry_time,
             self.aggregate_premium(),
             option.quantity
         );

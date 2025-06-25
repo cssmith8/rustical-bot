@@ -175,6 +175,7 @@ async fn main() -> Result<(), anyhow::Error> {
                 commands::options::edit::edit::edit(),
                 commands::options::edit::date::date(),
                 commands::options::view::view::view(),
+                commands::options::view::all::all(),
                 commands::options::view::details::details(),
                 commands::options::query::stats::stats(),
                 commands::options::query::best::best(),

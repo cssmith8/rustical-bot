@@ -39,9 +39,10 @@ pub async fn expire(ctx: AppContext<'_>) -> Result<(), Error> {
     };
     let last_index = position.contracts.len() - 1;
     position.contracts[last_index].open.status = "expired".to_string();
+    let gain = position.gain();
     position_list_replace(&mut db, "positions", edit_id as usize, position);
 
-    ctx.say("Contract Expired :money_mouth:").await?;
+    ctx.say(format!("Contract Expired :money_mouth: Made `${}`", gain)).await?;
 
     db.set("edit_id", &-1)?;
     Ok(())
