@@ -11,11 +11,11 @@ pub type AppContext<'a> = poise::ApplicationContext<'a, Data, Error>;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct OptionOpen {
-    pub date: DateTime<Local>,
+    pub date: DateTime<Utc>,
     pub open_type: String,
     pub ticker: String,
     pub strike: f64,
-    pub expiry: DateTime<Local>,
+    pub expiry: DateTime<Utc>,
     pub premium: f64,
     pub quantity: u16,
     pub status: String,
@@ -23,7 +23,7 @@ pub struct OptionOpen {
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct OptionClose {
-    pub date: DateTime<Local>,
+    pub date: DateTime<Utc>,
     pub close_type: String,
     pub premium: f64,
 }
@@ -72,15 +72,18 @@ impl Contract {
             open.date.day(),
             open.date.year() % 100
         );
+        let unixopendate = open.date.timestamp();
         let expiry_date = format!(
             "{}/{}/{}",
             open.expiry.month(),
             open.expiry.day(),
             open.expiry.year() % 100
         );
+        let unixexpirydate = open.expiry.timestamp();
         let close_info = match close {
             Some(c) => format!(
-                "Closed on {}/{}/{} at premium ${}",
+                "Closed <t:{}:R> ({}/{}/{}) at premium ${}",
+                c.date.timestamp(),
                 c.date.month(),
                 c.date.day(),
                 c.date.year() % 100,
@@ -92,7 +95,8 @@ impl Contract {
             "{} {} ${} {}\n\
             Premium: ${}\n\
             Quantity: {}\n\
-            Opened on: {}\n\
+            Opened <t:{}:R> ({})\n\
+            Expires <t:{}:R> ({})\n\
             Status: {}",
             open.ticker,
             expiry_date,
@@ -100,7 +104,10 @@ impl Contract {
             open.open_type,
             open.premium,
             open.quantity,
+            unixopendate,
             open_date,
+            unixexpirydate,
+            expiry_date,
             close_info
         )
     }

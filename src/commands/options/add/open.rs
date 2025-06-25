@@ -44,14 +44,14 @@ pub async fn open(
     match data {
         Some(data) => {
             //get modal info
-            let date = Local::now();
+            let date = Utc::now();
             let strike = data.strike.parse::<f64>()?;
             let nd = NaiveDate::parse_from_str(&data.exp, "%Y-%m-%d")?;
-            let expiry = match Local.with_ymd_and_hms(
+            let expiry = match Utc.with_ymd_and_hms(
                 nd.year_ce().1 as i32,
                 nd.month0() + 1,
                 nd.day0() + 1,
-                0,
+                20,
                 0,
                 0,
             ) {

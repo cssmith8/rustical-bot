@@ -77,11 +77,11 @@ pub async fn edit(ctx: AppContext<'_>) -> Result<(), Error> {
     }
     if let Some(exp) = data.exp {
         let nd = NaiveDate::parse_from_str(&exp, "%Y-%m-%d")?;
-        position.contracts[last_index].open.expiry = match Local.with_ymd_and_hms(
+        position.contracts[last_index].open.expiry = match Utc.with_ymd_and_hms(
             nd.year_ce().1 as i32,
             nd.month0() + 1,
             nd.day0() + 1,
-            0,
+            20,
             0,
             0,
         ) {

@@ -57,7 +57,7 @@ pub async fn close(ctx: AppContext<'_>) -> Result<(), Error> {
     };
     let last_index = position.contracts.len() - 1;
     position.contracts[last_index].close = Some(OptionClose {
-        date: Local::now(),
+        date: Utc::now(),
         close_type: "close".to_string(),
         premium: data.premium.parse::<f64>()?,
     });

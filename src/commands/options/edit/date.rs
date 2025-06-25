@@ -63,12 +63,12 @@ pub async fn date(ctx: AppContext<'_>) -> Result<(), Error> {
     };
 
     if let Some(year) = data.year {
-        position.contracts[last_index].open.date = match Local
+        position.contracts[last_index].open.date = match Utc
             .with_ymd_and_hms(
                 year.parse::<i32>()?,
                 position.contracts[last_index].open.date.month(),
                 position.contracts[last_index].open.date.day(),
-                0,
+                17,
                 0,
                 0,
             )
@@ -78,12 +78,12 @@ pub async fn date(ctx: AppContext<'_>) -> Result<(), Error> {
             };
     }
     if let Some(month) = data.month {
-        position.contracts[last_index].open.date = match Local
+        position.contracts[last_index].open.date = match Utc
             .with_ymd_and_hms(
                 position.contracts[last_index].open.date.year(),
                 month.parse::<u32>()?,
                 position.contracts[last_index].open.date.day(),
-                0,
+                17,
                 0,
                 0,
             )
@@ -93,11 +93,11 @@ pub async fn date(ctx: AppContext<'_>) -> Result<(), Error> {
             };
     }
     if let Some(day) = data.day {
-        position.contracts[last_index].open.date = match Local.with_ymd_and_hms(
+        position.contracts[last_index].open.date = match Utc.with_ymd_and_hms(
             position.contracts[last_index].open.date.year(),
             position.contracts[last_index].open.date.month(),
             day.parse::<u32>()?,
-            0,
+            17,
             0,
             0,
         ) {

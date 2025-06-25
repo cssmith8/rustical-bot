@@ -62,11 +62,11 @@ pub async fn roll(ctx: AppContext<'_>) -> Result<(), Error> {
     };
 
     let nd = NaiveDate::parse_from_str(&data.exp, "%Y-%m-%d")?;
-    let expiry = match Local.with_ymd_and_hms(
+    let expiry = match Utc.with_ymd_and_hms(
         nd.year_ce().1 as i32,
         nd.month0() + 1,
         nd.day0() + 1,
-        0,
+        20,
         0,
         0,
     ) {
@@ -78,7 +78,7 @@ pub async fn roll(ctx: AppContext<'_>) -> Result<(), Error> {
     let last_index = position.contracts.len() - 1;
     position.contracts[last_index].open.status = "rolled".to_string();
     position.contracts[last_index].close = Some(OptionClose {
-        date: Local::now(),
+        date: Utc::now(),
         close_type: "roll".to_string(),
         premium: data.premium_loss.parse::<f64>()?,
     });
@@ -90,7 +90,7 @@ pub async fn roll(ctx: AppContext<'_>) -> Result<(), Error> {
 
     position.contracts.push(Contract {
         open: OptionOpen {
-            date: Local::now(),
+            date: Utc::now(),
             open_type: position.contracts[last_index].open.open_type.clone(),
             ticker: position.contracts[last_index].open.ticker.clone(),
             strike: strike,
