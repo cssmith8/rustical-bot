@@ -134,6 +134,11 @@ impl Position {
         }
         true
     }
+
+    pub fn final_contract(&self) -> &Contract {
+        &self.contracts[self.contracts.len() - 1]
+    }
+
     pub fn aggregate_premium(&self) -> f64 {
         (self.contracts.iter().map(|c| c.aggregate_premium()).sum::<f64>() * 100.0).round() / 100.0
     }
@@ -156,7 +161,7 @@ impl Position {
                 time += close.date.signed_duration_since(contract.open.date);
             } else {
                 //if the contract is open, return the time between the open and now
-                time += Local::now().signed_duration_since(contract.open.date);
+                time += Utc::now().signed_duration_since(contract.open.date);
             }
         }
         if time.num_days() < 1 {
@@ -178,12 +183,12 @@ impl Position {
     }
 
     pub fn get_status(&self) -> String {
-        self.contracts[self.contracts.len() - 1].open.status.clone()
+        self.final_contract().open.status.clone()
     }
 
     pub fn display(&self) -> String {
         let rolls = self.num_rolls();
-        let option = &self.contracts[self.contracts.len() - 1].open;
+        let option = &self.final_contract().open;
         let date: String = option.expiry.month().to_string()
             + "/"
             + &option.expiry.day().to_string()

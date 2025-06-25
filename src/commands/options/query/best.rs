@@ -1,6 +1,6 @@
 use crate::types::{AppContext, Error, Position};
 use crate::utils::open_option_db;
-use chrono::Datelike;
+use chrono::{Datelike};
 
 #[poise::command(slash_command)]
 pub async fn best(ctx: AppContext<'_>) -> Result<(), Error> {
@@ -30,14 +30,20 @@ pub async fn best(ctx: AppContext<'_>) -> Result<(), Error> {
 
     let best_positions: Vec<String> = positions.iter().take(3).map(|p| {
         let ticker = p.contracts[0].open.ticker.clone();
-        let open_date = format!("{}/{}/{}", p.contracts[0].open.date.month(), p.contracts[0].open.date.day(), p.contracts[0].open.date.year() % 100);
+        //date of the contract close, if it exists. otherwise, open date
+        let date = if let Some(close) = &p.final_contract().close {
+            &close.date
+        } else {
+            &p.contracts[0].open.date
+        };
+        let date_string = format!("{}/{}/{}", date.month(), date.day(), date.year() % 100);
         let gain = p.gain();
         let investment = p.investment();
         let duration = p.time();
         let duration_plural = if duration > 1 { "s" } else { "" };
         format!(
-            "```\n{} - {}\nGained ${:.2} from investment of ${:.2} over {} day{}\nDaily ROI: {:.2}%```",
-            open_date, ticker, gain, investment, duration, duration_plural, p.return_on_investment() * 100.0 / duration as f64
+            "```\n{} - {}\nGained ${:.2} from investment of ${} over {} day{}\nDaily ROI: {:.2}%```",
+            date_string, ticker, gain, investment, duration, duration_plural, p.return_on_investment() * 100.0 / duration as f64
         )
     }).collect();
 
