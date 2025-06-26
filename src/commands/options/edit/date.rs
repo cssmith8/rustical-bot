@@ -55,19 +55,26 @@ pub async fn date(ctx: AppContext<'_>) -> Result<(), Error> {
             return Err(Error::from("Could not retrieve position"));
         }
     };
-    let last_index = position.contracts.len() - 1;
 
     let data = match DateModal::execute(ctx).await? {
         Some(data) => data,
         None => return Ok(()),
     };
 
+    // Extract current date fields before mutably borrowing contracts
+    let (cur_year, cur_month, cur_day) = {
+        let final_date = position.get_final_contract().open.date;
+        (final_date.year(), final_date.month(), final_date.day())
+    };
+
+    let last_idx = position.contracts.len() - 1;
+
     if let Some(year) = data.year {
-        position.contracts[last_index].open.date = match Utc
+        position.contracts[last_idx].open.date = match Utc
             .with_ymd_and_hms(
                 year.parse::<i32>()?,
-                position.contracts[last_index].open.date.month(),
-                position.contracts[last_index].open.date.day(),
+                cur_month,
+                cur_day,
                 17,
                 0,
                 0,
@@ -78,11 +85,11 @@ pub async fn date(ctx: AppContext<'_>) -> Result<(), Error> {
             };
     }
     if let Some(month) = data.month {
-        position.contracts[last_index].open.date = match Utc
+        position.contracts[last_idx].open.date = match Utc
             .with_ymd_and_hms(
-                position.contracts[last_index].open.date.year(),
+                cur_year,
                 month.parse::<u32>()?,
-                position.contracts[last_index].open.date.day(),
+                cur_day,
                 17,
                 0,
                 0,
@@ -93,9 +100,9 @@ pub async fn date(ctx: AppContext<'_>) -> Result<(), Error> {
             };
     }
     if let Some(day) = data.day {
-        position.contracts[last_index].open.date = match Utc.with_ymd_and_hms(
-            position.contracts[last_index].open.date.year(),
-            position.contracts[last_index].open.date.month(),
+        position.contracts[last_idx].open.date = match Utc.with_ymd_and_hms(
+            cur_year,
+            cur_month,
             day.parse::<u32>()?,
             17,
             0,

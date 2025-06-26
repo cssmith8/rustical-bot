@@ -29,12 +29,12 @@ pub async fn best(ctx: AppContext<'_>) -> Result<(), Error> {
     });
 
     let best_positions: Vec<String> = positions.iter().take(3).map(|p| {
-        let ticker = p.contracts[0].open.ticker.clone();
+        let ticker = p.get_ticker().clone();
         //date of the contract close, if it exists. otherwise, open date
-        let date = if let Some(close) = &p.final_contract().close {
+        let date = if let Some(close) = &p.get_final_contract().close {
             &close.date
         } else {
-            &p.contracts[0].open.date
+            &p.get_first_contract().open.date
         };
         let date_string = format!("{}/{}/{}", date.month(), date.day(), date.year() % 100);
         let gain = p.gain();
@@ -42,7 +42,7 @@ pub async fn best(ctx: AppContext<'_>) -> Result<(), Error> {
         let duration = p.time();
         let duration_plural = if duration > 1 { "s" } else { "" };
         format!(
-            "```\n{} - {}\nGained ${:.2} from investment of ${} over {} day{}\nDaily ROI: {:.2}%```",
+            "```\n{} - {}\nGained ${:.2} from investment of ${} over {} day{}\nDaily Return: {:.2}%```",
             date_string, ticker, gain, investment, duration, duration_plural, p.return_on_investment() * 100.0 / duration as f64
         )
     }).collect();

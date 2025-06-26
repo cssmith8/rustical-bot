@@ -36,7 +36,7 @@ pub async fn view(ctx: AppContext<'_>) -> Result<(), Error> {
     }
 
     //sort the open_positions vector by the expiry date of each position
-    open_positions.sort_by_key(|op| op.pos.final_contract().open.expiry);
+    open_positions.sort_by_key(|op| op.pos.get_final_contract().open.expiry);
 
     //if no open options, return
     if open_positions.len() == 0 {

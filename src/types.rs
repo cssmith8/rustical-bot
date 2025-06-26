@@ -63,6 +63,30 @@ impl Contract {
         }
     }
 
+    pub fn option_type(&self) -> String {
+        self.open.open_type.clone()
+    }
+
+    pub fn ticker(&self) -> String {
+        self.open.ticker.clone()
+    }
+
+    pub fn strike(&self) -> f64 {
+        self.open.strike
+    }
+
+    pub fn expiry(&self) -> DateTime<Utc> {
+        self.open.expiry
+    }
+
+    pub fn quantity(&self) -> u16 {
+        self.open.quantity
+    }
+
+    pub fn status(&self) -> String {
+        self.open.status.clone()
+    }
+
     pub async fn display(&self) -> String {
         let open = &self.open;
         let close = &self.close;
@@ -126,18 +150,36 @@ impl Position {
         }
     }
 
-    pub fn is_closed(&self) -> bool {
-        let final_contract = self.final_contract();
-        final_contract.close.is_some()
-            || matches!(final_contract.open.status.as_str(), "assigned" | "expired")
+    pub fn option_type(&self) -> String {
+        self.get_first_contract().option_type().clone()
     }
 
-    pub fn final_contract(&self) -> &Contract {
+    pub fn is_closed(&self) -> bool {
+        let final_contract = self.get_final_contract();
+        final_contract.close.is_some()
+            || matches!(final_contract.status().as_str(), "assigned" | "expired" | "rolled")
+    }
+
+    pub fn get_final_contract(&self) -> &Contract {
+        if self.contracts.is_empty() {
+            panic!("Error: Empty position");
+        }
         &self.contracts[self.contracts.len() - 1]
+    }
+
+    pub fn get_first_contract(&self) -> &Contract {
+        if self.contracts.is_empty() {
+            panic!("Error: Empty position");
+        }
+        &self.contracts[0]
     }
 
     pub fn aggregate_premium(&self) -> f64 {
         (self.contracts.iter().map(|c| c.aggregate_premium()).sum::<f64>() * 100.0).round() / 100.0
+    }
+
+    pub fn get_ticker(&self) -> String {
+        self.get_final_contract().ticker()
     }
 
     pub fn gain(&self) -> f64 {
@@ -148,8 +190,8 @@ impl Position {
         self.contracts.len() - 1
     }
 
-    pub fn status(&self) -> String {
-        self.final_contract().open.status.clone()
+    pub fn get_status(&self) -> String {
+        self.get_final_contract().status().clone()
     }
 
     pub fn time(&self) -> i64 {
@@ -176,20 +218,16 @@ impl Position {
             print!("Error: Empty position");
             return 0.0;
         }
-        self.contracts[0].open.strike * self.contracts[0].open.quantity as f64 * 100.0
+        self.get_final_contract().strike() * self.get_final_contract().quantity() as f64 * 100.0
     }
 
     pub fn return_on_investment(&self) -> f64 {
         self.gain() / self.investment()
     }
 
-    pub fn get_status(&self) -> String {
-        self.final_contract().open.status.clone()
-    }
-
     pub fn display(&self) -> String {
         let rolls = self.num_rolls();
-        let option = &self.final_contract().open;
+        let option = &self.get_final_contract().open;
         let date: String = option.expiry.month().to_string()
             + "/"
             + &option.expiry.day().to_string()

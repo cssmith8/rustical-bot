@@ -22,7 +22,7 @@ pub async fn all(ctx: AppContext<'_>) -> Result<(), Error> {
     }
 
     //sort the open_positions vector by the expiry date of each position
-    all_posiitons.sort_by_key(|pos| pos.final_contract().open.expiry);
+    all_posiitons.sort_by_key(|pos| pos.get_final_contract().expiry());
 
     //if no open options, return
     if all_posiitons.len() == 0 {
@@ -60,7 +60,7 @@ pub async fn view_all(
                                 &format!(
                                     "{}Status: `{}`",
                                     pages[0].display(),
-                                    pages[0].status()
+                                    pages[0].get_status()
                                 ),
                             ).await,
                 ))
@@ -109,7 +109,7 @@ pub async fn view_all(
                                 &format!(
                                     "{}Status: `{}`",
                                     pages[current_page].display(),
-                                    pages[current_page].status()
+                                    pages[current_page].get_status()
                                 ),
                             )
                             .await,
