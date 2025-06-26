@@ -180,6 +180,7 @@ async fn main() -> Result<(), anyhow::Error> {
                 commands::options::view::assets::assets(),
                 commands::options::query::stats::stats(),
                 commands::options::query::best::best(),
+                commands::options::query::month::month(),
             ],
             event_handler: |ctx, event, framework, data| {
                 Box::pin(event_handler(ctx, event, framework, data))
