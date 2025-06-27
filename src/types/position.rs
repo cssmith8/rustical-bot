@@ -89,6 +89,10 @@ impl Position {
         self.gain() / self.investment()
     }
 
+    pub fn investment_time(&self) -> f64 {
+        return self.investment() * self.time() as f64;
+    }
+
     pub fn display(&self) -> String {
         let rolls = self.num_rolls();
         let option = &self.get_final_contract().open;
