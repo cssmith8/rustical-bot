@@ -1,4 +1,5 @@
-use crate::types::{AppContext, Error, Position};
+use crate::types::types::{AppContext, Error};
+use crate::types::position::Position;
 use crate::utils::{label_display, open_option_db};
 use poise::serenity_prelude::{self as serenity};
 

@@ -1,4 +1,4 @@
-use crate::types::{AppContext, Error};
+use crate::types::types::{AppContext, Error};
 
 #[derive(Debug, serde::Deserialize)]
 struct BrawlerRaw {

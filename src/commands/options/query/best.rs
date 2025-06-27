@@ -1,6 +1,7 @@
-use crate::types::{AppContext, Error, Position};
+use crate::types::types::{AppContext, Error};
+use crate::types::position::Position;
 use crate::utils::open_option_db;
-use chrono::{Datelike};
+use chrono::Datelike;
 
 #[poise::command(slash_command)]
 pub async fn best(ctx: AppContext<'_>) -> Result<(), Error> {

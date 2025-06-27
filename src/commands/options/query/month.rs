@@ -1,5 +1,6 @@
 use poise::serenity_prelude::{self as serenity, Colour};
-use crate::types::{AppContext, Error, Position};
+use crate::types::types::{AppContext, Error};
+use crate::types::position::Position;
 use crate::utils::open_option_db;
 use chrono::{Datelike, Duration, NaiveDate};
 use std::collections::HashMap;

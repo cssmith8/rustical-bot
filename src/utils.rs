@@ -1,4 +1,4 @@
-use crate::types::Position;
+use crate::types::position::Position;
 use pickledb::{PickleDb, PickleDbDumpPolicy, SerializationMethod};
 
 pub fn open_option_db(path: String) -> Option<PickleDb> {

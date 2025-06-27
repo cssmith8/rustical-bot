@@ -1,5 +1,5 @@
-use crate::types::Position;
-use crate::types::{AppContext, Error};
+use crate::types::types::{AppContext, Error};
+use crate::types::position::Position;
 use crate::utils::{open_option_db, position_list_replace};
 use chrono::prelude::*;
 //use poise::serenity_prelude::CreateQuickModal;

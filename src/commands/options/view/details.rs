@@ -1,4 +1,5 @@
-use crate::types::{AppContext, Contract, Error, Position};
+use crate::types::types::{AppContext, Error};
+use crate::types::{position::Position, contract::Contract};
 use crate::utils::{open_option_db};
 use poise::serenity_prelude::{self as serenity};
 
