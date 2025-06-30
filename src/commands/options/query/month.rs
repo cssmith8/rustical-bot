@@ -27,9 +27,11 @@ pub async fn month(ctx: AppContext<'_>) -> Result<(), Error> {
     }
 
     let mut profitmonths: Vec<PositionMonth> = Vec::new();
+    let mut taxablemonths: Vec<PositionMonth> = Vec::new();
 
     for pos in &closed_positions {
-        profitmonths.extend(pos.generate_profit_months());
+        profitmonths.extend(pos.generate_distributed_months());
+        taxablemonths.extend(pos.generate_taxable_months());
     }
 
     // new hashmap that stores strings -> TradingMonth
@@ -42,6 +44,27 @@ pub async fn month(ctx: AppContext<'_>) -> Result<(), Error> {
 
         // if there does not exist a trading month with matching id, make one in the hashmap
         trading_months
+            .entry(key.clone())
+            .and_modify(|tm| {
+                // else use the .combine() method on the tradingmonth to add the data of the profitmonth
+                tm.combine(profitmonth.clone());
+            })
+            .or_insert_with(|| TradingMonth {
+                year: profitmonth.year,
+                month: profitmonth.month,
+                gain: profitmonth.gain,
+                investment: profitmonth.investment
+            });
+    }
+
+    let mut taxable_trading_months: HashMap<String, TradingMonth> = HashMap::new();
+
+    for profitmonth in &taxablemonths {
+        // create a unique id for the trading month, e.g., "YYYY-MM"
+        let key = profitmonth.id();
+
+        // if there does not exist a trading month with matching id, make one in the hashmap
+        taxable_trading_months
             .entry(key.clone())
             .and_modify(|tm| {
                 // else use the .combine() method on the tradingmonth to add the data of the profitmonth
@@ -80,10 +103,26 @@ pub async fn month(ctx: AppContext<'_>) -> Result<(), Error> {
         gains_gains.push_str(&format!("{}\n", tradingmonth.display_distributed_gain()));
     }
 
+    let mut taxgains_chrono: String = "**Taxable Gain**\n-# Chronological Order\n\n".to_string();
+    let mut tax_months_chrono: Vec<&TradingMonth> = taxable_trading_months.values().collect();
+    tax_months_chrono.sort_by(|a, b| b.id().partial_cmp(&a.id()).unwrap_or(std::cmp::Ordering::Equal));
+    for tradingmonth in tax_months_chrono {
+        taxgains_chrono.push_str(&format!("{}\n", tradingmonth.display_distributed_gain()));
+    }
+
+    let mut taxgains_taxgains: String = "**Taxable Gain**\n-# by Taxable Gain\n\n".to_string();
+    let mut tax_months_gains: Vec<&TradingMonth> = taxable_trading_months.values().collect();
+    tax_months_gains.sort_by(|a, b| b.gain.partial_cmp(&a.gain).unwrap_or(std::cmp::Ordering::Equal));
+    for tradingmonth in tax_months_gains {
+        taxgains_taxgains.push_str(&format!("{}\n", tradingmonth.display_distributed_gain()));
+    }
+
     responses.push(chrono_returns);
     responses.push(returns_returns);
     responses.push(chrono_gains);
     responses.push(gains_gains);
+    responses.push(taxgains_chrono);
+    responses.push(taxgains_taxgains);
     
     view_strings(ctx, responses).await?;
     Ok(())
