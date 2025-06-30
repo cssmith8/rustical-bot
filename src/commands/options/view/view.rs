@@ -50,7 +50,7 @@ pub async fn view(ctx: AppContext<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-pub async fn view_open(
+async fn view_open(
     ctx: AppContext<'_>,
     pages: Vec<OpenPosition>,
 ) -> Result<(), serenity::Error> {

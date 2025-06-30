@@ -36,7 +36,7 @@ pub async fn all(ctx: AppContext<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-pub async fn view_all(
+async fn view_all(
     ctx: AppContext<'_>,
     pages: Vec<Position>,
 ) -> Result<(), serenity::Error> {

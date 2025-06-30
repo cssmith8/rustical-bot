@@ -11,22 +11,8 @@ pub struct TradingMonth {
 
 impl TradingMonth {
 
-    pub fn month_name(&self) -> String {
-        return match self.month {
-            1 => "January".to_string(),
-            2 => "February".to_string(),
-            3 => "March".to_string(),
-            4 => "April".to_string(),
-            5 => "May".to_string(),
-            6 => "June".to_string(),
-            7 => "July".to_string(),
-            8 => "August".to_string(),
-            9 => "September".to_string(),
-            10 => "October".to_string(),
-            11 => "November".to_string(),
-            12 => "December".to_string(),
-            _ => panic!("Invalid month"),
-        };
+    pub fn id(&self) -> String {
+        format!("{}-{:02}", self.year, self.month)
     }
 
     pub fn combine(&mut self, positionmonth: PositionMonth) {
@@ -38,8 +24,21 @@ impl TradingMonth {
         self.gain / self.investment * 100.0
     }
 
-    #[allow(dead_code)]
-    pub fn display(&self) -> String {
-        format!("{} {}\nGain: {}\nInvestment: {}", &self.month_name(), &self.year, self.gain, self.investment)
+    pub fn display_daily_return_rate(&self) -> String {
+        let year = self.year;
+        let month = self.month;
+        let month_name = chrono::NaiveDate::from_ymd_opt(year, month, 1)
+            .map(|d| d.format("%B").to_string())
+            .unwrap_or_else(|| "Unknown".to_string());
+        return format!("{} {}: `{:.2}%`", month_name, year, self.daily_return_rate());
+    }
+
+    pub fn display_distributed_gain(&self) -> String {
+        let year = self.year;
+        let month = self.month;
+        let month_name = chrono::NaiveDate::from_ymd_opt(year, month, 1)
+            .map(|d| d.format("%B").to_string())
+            .unwrap_or_else(|| "Unknown".to_string());
+        return format!("{} {}: `${:.2}`", month_name, year, self.gain);
     }
 }

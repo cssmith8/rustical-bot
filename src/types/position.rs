@@ -129,15 +129,6 @@ impl Position {
                 gain: &self.gain() * fraction,
                 investment: self.investment() * days_in_month as f64
             });
-            if self.get_final_contract().expiry().year() == 2023 {
-                println!("{}", PositionMonth {
-                year: year,
-                month: month,
-                position: self.clone(),
-                gain: &self.gain() * fraction,
-                investment: self.investment() * days_in_month as f64
-            }.display());
-            }
             current = next_month;
         }
         profit_months

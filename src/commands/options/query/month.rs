@@ -1,9 +1,9 @@
-use poise::serenity_prelude::{self as serenity, Colour};
+use poise::serenity_prelude::{self as serenity};
 use crate::types::positionmonth::PositionMonth;
 use crate::types::tradingmonth::TradingMonth;
 use crate::types::types::{AppContext, Error};
 use crate::types::position::Position;
-use crate::utils::open_option_db;
+use crate::utils::{label_display, open_option_db};
 use std::collections::HashMap;
 
 #[poise::command(slash_command)]
@@ -55,24 +55,122 @@ pub async fn month(ctx: AppContext<'_>) -> Result<(), Error> {
             });
     }
 
-    let mut response = String::new();
-    let mut months: Vec<&TradingMonth> = trading_months.values().collect();
-    months.sort_by(|a, b| b.daily_return_rate().partial_cmp(&a.daily_return_rate()).unwrap_or(std::cmp::Ordering::Equal));
-    for tradingmonth in months {
-        let year = tradingmonth.year;
-        let month = tradingmonth.month;
-        let return_rate = tradingmonth.daily_return_rate();
-        let month_name = chrono::NaiveDate::from_ymd_opt(year, month, 1)
-            .map(|d| d.format("%B").to_string())
-            .unwrap_or_else(|| "Unknown".to_string());
-        response.push_str(&format!("{} {}: {:.2}%\n", month_name, year, return_rate));
+    let mut responses: Vec<String> = Vec::new();
+
+    let mut chrono_returns: String = "**Daily Return Rate**\n-# Chronological Order\n\n".to_string();
+    let mut chrono_gains: String = "**Distributed Gain**\n-# Chronological Order\n\n".to_string();
+    let mut months_chrono: Vec<&TradingMonth> = trading_months.values().collect();
+    months_chrono.sort_by(|a, b| b.id().partial_cmp(&a.id()).unwrap_or(std::cmp::Ordering::Equal));
+    for tradingmonth in months_chrono {
+        chrono_returns.push_str(&format!("{}\n", tradingmonth.display_daily_return_rate()));
+        chrono_gains.push_str(&format!("{}\n", tradingmonth.display_distributed_gain()));
     }
+
+    let mut returns_returns = "**Daily Return Rate**\n-# by Daily Return Rate\n\n".to_string();
+    let mut months_returns: Vec<&TradingMonth> = trading_months.values().collect();
+    months_returns.sort_by(|a, b| b.daily_return_rate().partial_cmp(&&a.daily_return_rate()).unwrap_or(std::cmp::Ordering::Equal));
+    for tradingmonth in months_returns {
+        returns_returns.push_str(&format!("{}\n", tradingmonth.display_daily_return_rate()));
+    }
+
+    let mut gains_gains = "**Distributed Gain**\n-# by Distributed Gain\n\n".to_string();
+    let mut months_gains: Vec<&TradingMonth> = trading_months.values().collect();
+    months_gains.sort_by(|a, b| b.gain.partial_cmp(&a.gain).unwrap_or(std::cmp::Ordering::Equal));
+    for tradingmonth in months_gains {
+        gains_gains.push_str(&format!("{}\n", tradingmonth.display_distributed_gain()));
+    }
+
+    responses.push(chrono_returns);
+    responses.push(returns_returns);
+    responses.push(chrono_gains);
+    responses.push(gains_gains);
     
-    let reply = poise::CreateReply::default().embed(
-        serenity::CreateEmbed::default()
-            .description(format!("**Best months by daily return rate:**\n\n{}", response))
-            .color(Colour::DARK_GREEN),
-    );
+    view_strings(ctx, responses).await?;
+    Ok(())
+}
+
+async fn view_strings(
+    ctx: AppContext<'_>,
+    pages: Vec<String>,
+) -> Result<(), serenity::Error> {
+    // Define some unique identifiers for the navigation buttons
+    let ctx_id = ctx.id();
+    let prev_button_id = format!("{}prev", ctx_id);
+    let next_button_id = format!("{}next", ctx_id);
+
+    // Send the embed with the first page as content
+    let reply =
+        {
+            let components = serenity::CreateActionRow::Buttons(vec![
+                serenity::CreateButton::new(&prev_button_id).emoji('◀'),
+                serenity::CreateButton::new(&next_button_id).emoji('▶'),
+            ]);
+
+            poise::CreateReply::default()
+                .embed(serenity::CreateEmbed::default().description(
+                    label_display(
+                                0,
+                                pages.len() as u32,
+                                &format!(
+                                    "{}",
+                                    pages[0]
+                                ),
+                            ).await,
+                ))
+                .components(vec![components])
+        };
+
     ctx.send(reply).await?;
+
+    // Loop through incoming interactions with the navigation buttons
+    let mut current_page = 0;
+    while let Some(press) = serenity::collector::ComponentInteractionCollector::new(ctx)
+        // We defined our button IDs to start with `ctx_id`. If they don't, some other command's
+        // button was pressed
+        .filter(move |press| press.data.custom_id.starts_with(&ctx_id.to_string()))
+        // Timeout when no navigation button has been pressed for 24 hours
+        .timeout(std::time::Duration::from_secs(3600 * 24))
+        .await
+    {
+        if press.user.id != ctx.interaction.user.id {
+            ctx.say("Cannot select another user's position").await?;
+            continue;
+        }
+        // Depending on which button was pressed, go to next or previous page
+        if press.data.custom_id == next_button_id {
+            current_page += 1;
+            if current_page >= pages.len() {
+                current_page = 0;
+            }
+        } else if press.data.custom_id == prev_button_id {
+            current_page = current_page.checked_sub(1).unwrap_or(pages.len() - 1);
+        } else {
+            // This is an unrelated button interaction
+            continue;
+        }
+
+        // Update the message with the new page contents
+        press
+            .create_response(
+                ctx.serenity_context(),
+                serenity::CreateInteractionResponse::UpdateMessage(
+                    serenity::CreateInteractionResponseMessage::new().embed(
+                        serenity::CreateEmbed::new().description(
+                            label_display(
+                                current_page as u32,
+                                pages.len() as u32,
+                                &format!(
+                                    "{}",
+                                    pages[current_page]
+                                ),
+                            )
+                            .await,
+                        ),
+                    ),
+                ),
+            )
+            .await?;
+    }
+
     Ok(())
 }
