@@ -1,5 +1,5 @@
-use crate::types::{AppContext, Error};
-use crate::types::{Contract, OptionOpen, Position};
+use crate::types::types::{AppContext, Error};
+use crate::types::{contract::Contract, option::OptionOpen, position::Position};
 use crate::utils::{open_option_db};
 use chrono::prelude::*;
 use anyhow::Result;

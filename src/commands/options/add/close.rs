@@ -1,5 +1,5 @@
-use crate::types::{AppContext, Error};
-use crate::types::{OptionClose, Position};
+use crate::types::types::{AppContext, Error};
+use crate::types::{option::OptionClose, position::Position};
 use crate::utils::{open_option_db, position_list_replace};
 use chrono::prelude::*;
 use anyhow::Result;

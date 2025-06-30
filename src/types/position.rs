@@ -1,141 +1,6 @@
-use chrono::prelude::*;
-use pickledb::PickleDb;
-use tokio::sync::Mutex;
-
-pub struct Data {
-    pub db: Mutex<PickleDb>,
-} // User data, which is stored and accessible in all command invocations
-pub type Error = Box<dyn std::error::Error + Send + Sync>;
-pub type Context<'a> = poise::Context<'a, Data, Error>;
-pub type AppContext<'a> = poise::ApplicationContext<'a, Data, Error>;
-
-#[derive(serde::Serialize, serde::Deserialize)]
-pub struct OptionOpen {
-    pub date: DateTime<Utc>,
-    pub open_type: String,
-    pub ticker: String,
-    pub strike: f64,
-    pub expiry: DateTime<Utc>,
-    pub premium: f64,
-    pub quantity: u16,
-    pub status: String,
-}
-
-#[derive(serde::Serialize, serde::Deserialize)]
-pub struct OptionClose {
-    pub date: DateTime<Utc>,
-    pub close_type: String,
-    pub premium: f64,
-}
-
-#[derive(serde::Serialize, serde::Deserialize)]
-pub struct Contract {
-    pub open: OptionOpen,
-    pub close: Option<OptionClose>,
-}
-
-impl Contract {
-
-    pub fn clone(&self) -> Contract {
-        Contract {
-            open: OptionOpen {
-                date: self.open.date,
-                open_type: self.open.open_type.clone(),
-                ticker: self.open.ticker.clone(),
-                strike: self.open.strike,
-                expiry: self.open.expiry,
-                premium: self.open.premium,
-                quantity: self.open.quantity,
-                status: self.open.status.clone(),
-            },
-            close: self.close.as_ref().map(|c| OptionClose {
-                date: c.date,
-                close_type: c.close_type.clone(),
-                premium: c.premium,
-            }),
-        }
-    }
-
-    pub fn aggregate_premium(&self) -> f64 {
-        match &self.close {
-            Some(close) => self.open.premium - close.premium,
-            None => self.open.premium,
-        }
-    }
-
-    pub fn option_type(&self) -> String {
-        self.open.open_type.clone()
-    }
-
-    pub fn ticker(&self) -> String {
-        self.open.ticker.clone()
-    }
-
-    pub fn strike(&self) -> f64 {
-        self.open.strike
-    }
-
-    pub fn expiry(&self) -> DateTime<Utc> {
-        self.open.expiry
-    }
-
-    pub fn quantity(&self) -> u16 {
-        self.open.quantity
-    }
-
-    pub fn status(&self) -> String {
-        self.open.status.clone()
-    }
-
-    pub async fn display(&self) -> String {
-        let open = &self.open;
-        let close = &self.close;
-        let open_date = format!(
-            "{}/{}/{}",
-            open.date.month(),
-            open.date.day(),
-            open.date.year() % 100
-        );
-        let unixopendate = open.date.timestamp();
-        let expiry_date = format!(
-            "{}/{}/{}",
-            open.expiry.month(),
-            open.expiry.day(),
-            open.expiry.year() % 100
-        );
-        let unixexpirydate = open.expiry.timestamp();
-        let close_info = match close {
-            Some(c) => format!(
-                "Closed <t:{}:R> ({}/{}/{}) at premium ${}",
-                c.date.timestamp(),
-                c.date.month(),
-                c.date.day(),
-                c.date.year() % 100,
-                c.premium
-            ),
-            None => "Still open".to_string(),
-        };
-        format!(
-            "{} {} ${} {}\n\
-            Premium: ${}\n\
-            Quantity: {}\n\
-            Opened <t:{}:R> ({})\n\
-            Expires <t:{}:R> ({})\n\
-            Status: {}",
-            open.ticker,
-            expiry_date,
-            open.strike,
-            open.open_type,
-            open.premium,
-            open.quantity,
-            unixopendate,
-            open_date,
-            unixexpirydate,
-            expiry_date,
-            close_info
-        )
-    }
-}
+use chrono::{prelude::*, Datelike, Duration, NaiveDate};
+use crate::types::contract::Contract;
+use crate::types::positionmonth::PositionMonth;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Position {
@@ -223,6 +88,59 @@ impl Position {
 
     pub fn return_on_investment(&self) -> f64 {
         self.gain() / self.investment()
+    }
+
+    pub fn generate_profit_months(&self) -> Vec<PositionMonth> {
+        let startdate = &self.get_first_contract().open.date;
+        let enddate = if self.get_final_contract().close.is_some() {
+            &self.get_final_contract().close.as_ref().unwrap().date
+        } else {
+            &self.get_final_contract().expiry()
+        };
+
+        let mut current = startdate.naive_utc().date();
+        let enddate_naive_dt = enddate.naive_utc();
+        let enddate_naive = enddate_naive_dt.date();
+        let total_days = (enddate_naive - current).num_days() + 1;
+
+        let mut profit_months = Vec::new();
+
+        while current <= enddate_naive {
+            let year = current.year();
+            let month = current.month();
+            let month_start = NaiveDate::from_ymd_opt(year, month, 1).unwrap();
+            let next_month = if month == 12 {
+                NaiveDate::from_ymd_opt(year + 1, 1, 1).unwrap()
+            } else {
+                NaiveDate::from_ymd_opt(year, month + 1, 1).unwrap()
+            };
+            let month_end = (next_month - Duration::days(1)).min(enddate_naive);
+
+            let range_start = current.max(month_start);
+            let range_end = month_end.min(enddate_naive);
+            let days_in_month = (range_end - range_start).num_days() + 1;
+
+            let fraction = days_in_month as f64 / total_days as f64;
+
+            profit_months.push(PositionMonth {
+                year: year,
+                month: month,
+                position: self.clone(),
+                gain: &self.gain() * fraction,
+                investment: self.investment() * days_in_month as f64
+            });
+            if self.get_final_contract().expiry().year() == 2023 {
+                println!("{}", PositionMonth {
+                year: year,
+                month: month,
+                position: self.clone(),
+                gain: &self.gain() * fraction,
+                investment: self.investment() * days_in_month as f64
+            }.display());
+            }
+            current = next_month;
+        }
+        profit_months
     }
 
     pub fn display(&self) -> String {

@@ -1,4 +1,5 @@
-use crate::types::{AppContext, Error, Position};
+use crate::types::types::{AppContext, Error};
+use crate::types::position::Position;
 use crate::utils::{label_display, open_option_db};
 use poise::serenity_prelude::{self as serenity};
 
@@ -15,22 +16,22 @@ pub async fn all(ctx: AppContext<'_>) -> Result<(), Error> {
         }
     };
 
-    let mut all_posiitons: Vec<Position> = Vec::new();
+    let mut all_positions: Vec<Position> = Vec::new();
     // iterate over the items in list1
     for item_iter in db.liter("positions") {
-        all_posiitons.push(item_iter.get_item::<Position>().unwrap());
+        all_positions.push(item_iter.get_item::<Position>().unwrap());
     }
 
     //sort the open_positions vector by the expiry date of each position
-    all_posiitons.sort_by_key(|pos| pos.get_final_contract().expiry());
+    all_positions.sort_by_key(|pos| pos.get_final_contract().expiry());
 
     //if no open options, return
-    if all_posiitons.len() == 0 {
+    if all_positions.len() == 0 {
         ctx.say("You have no open positions").await?;
         return Ok(());
     }
 
-    view_all(ctx, all_posiitons).await?;
+    view_all(ctx, all_positions).await?;
 
     Ok(())
 }

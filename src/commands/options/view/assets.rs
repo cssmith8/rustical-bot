@@ -1,5 +1,6 @@
+use crate::types::types::{AppContext, Error};
+use crate::types::position::Position;
 use poise::serenity_prelude::{self as serenity, Colour};
-use crate::types::{AppContext, Error, Position};
 use crate::utils::open_option_db;
 use std::collections::HashMap;
 
