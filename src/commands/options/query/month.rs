@@ -1,8 +1,9 @@
 use poise::serenity_prelude::{self as serenity, Colour};
+use crate::types::positionmonth::PositionMonth;
+use crate::types::tradingmonth::TradingMonth;
 use crate::types::types::{AppContext, Error};
 use crate::types::position::Position;
 use crate::utils::open_option_db;
-use chrono::{Datelike, Duration, NaiveDate};
 use std::collections::HashMap;
 
 #[poise::command(slash_command)]
@@ -25,61 +26,51 @@ pub async fn month(ctx: AppContext<'_>) -> Result<(), Error> {
         }
     }
 
-    let mut month_percents: HashMap<String, f64> = HashMap::new();
+    let mut profitmonths: Vec<PositionMonth> = Vec::new();
 
     for pos in &closed_positions {
-        let return_rate = pos.return_on_investment();
-
-        let startdate = pos.get_first_contract().open.date;
-        let enddate = if pos.get_final_contract().close.is_some() {
-            pos.get_final_contract().close.as_ref().unwrap().date
-        } else {
-            pos.get_final_contract().expiry()
-        };
-
-        let mut current = startdate.naive_utc().date();
-        let enddate_naive_dt = enddate.naive_utc();
-        let enddate_naive = enddate_naive_dt.date();
-        let total_days = (enddate_naive - current).num_days() + 1;
-
-        while current <= enddate_naive {
-            let year = current.year();
-            let month = current.month();
-            let month_start = NaiveDate::from_ymd_opt(year, month, 1).unwrap();
-            let next_month = if month == 12 {
-                NaiveDate::from_ymd_opt(year + 1, 1, 1).unwrap()
-            } else {
-                NaiveDate::from_ymd_opt(year, month + 1, 1).unwrap()
-            };
-            let month_end = (next_month - Duration::days(1)).min(enddate_naive);
-
-            let range_start = current.max(month_start);
-            let range_end = month_end.min(enddate_naive);
-            let days_in_month = (range_end - range_start).num_days() + 1;
-
-            let key = format!("{},{}", year, month);
-            let percent = days_in_month as f64 / total_days as f64;
-            *month_percents.entry(key).or_insert(0.0) += percent * return_rate * 100.0;
-
-            current = next_month;
-        }
+        profitmonths.extend(pos.generate_profit_months());
     }
+
+    // new hashmap that stores strings -> TradingMonth
+    let mut trading_months: HashMap<String, TradingMonth> = HashMap::new();
+
+    // for each profitmonth:
+    for profitmonth in &profitmonths {
+        // create a unique id for the trading month, e.g., "YYYY-MM"
+        let key = profitmonth.id();
+
+        // if there does not exist a trading month with matching id, make one in the hashmap
+        trading_months
+            .entry(key.clone())
+            .and_modify(|tm| {
+                // else use the .combine() method on the tradingmonth to add the data of the profitmonth
+                tm.combine(profitmonth.clone());
+            })
+            .or_insert_with(|| TradingMonth {
+                year: profitmonth.year,
+                month: profitmonth.month,
+                gain: profitmonth.gain,
+                investment: profitmonth.investment
+            });
+    }
+
     let mut response = String::new();
-    let mut month_percent_vec: Vec<_> = month_percents.into_iter().collect();
-    month_percent_vec.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
-    for (key, percent) in month_percent_vec {
-        let parts: Vec<&str> = key.split(',').collect();
-        let year: i32 = parts[0].parse().unwrap_or(0);
-        let month: u32 = parts[1].parse().unwrap_or(1);
+    let mut months: Vec<&TradingMonth> = trading_months.values().collect();
+    months.sort_by(|a, b| b.daily_return_rate().partial_cmp(&a.daily_return_rate()).unwrap_or(std::cmp::Ordering::Equal));
+    for tradingmonth in months {
+        let year = tradingmonth.year;
+        let month = tradingmonth.month;
+        let return_rate = tradingmonth.daily_return_rate();
         let month_name = chrono::NaiveDate::from_ymd_opt(year, month, 1)
             .map(|d| d.format("%B").to_string())
             .unwrap_or_else(|| "Unknown".to_string());
-        response.push_str(&format!("{} {}: {:.2}%\n", month_name, year, percent));
+        response.push_str(&format!("{} {}: {:.2}%\n", month_name, year, return_rate));
     }
     
     let reply = poise::CreateReply::default().embed(
         serenity::CreateEmbed::default()
-            .description(format!("{}", response))
+            .description(format!("**Best months by daily return rate:**\n\n{}", response))
             .color(Colour::DARK_GREEN),
     );
     ctx.send(reply).await?;

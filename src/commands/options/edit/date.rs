@@ -62,48 +62,38 @@ pub async fn date(ctx: AppContext<'_>) -> Result<(), Error> {
     };
 
     // Extract current date fields before mutably borrowing contracts
-    let (cur_year, cur_month, cur_day) = {
+    let (mut cur_year, mut cur_month, mut cur_day) = {
         let final_date = position.get_final_contract().open.date;
         (final_date.year(), final_date.month(), final_date.day())
     };
 
     let last_idx = position.contracts.len() - 1;
 
+    // Track if any fields were updated
+    let mut updated_fields = false;
+
+    // Update the working values instead of the position directly
     if let Some(year) = data.year {
-        position.contracts[last_idx].open.date = match Utc
-            .with_ymd_and_hms(
-                year.parse::<i32>()?,
-                cur_month,
-                cur_day,
-                17,
-                0,
-                0,
-            )
-            {
-                chrono::LocalResult::Single(datetime) => datetime,
-                _ => return Err(Error::from("Invalid date provided")),
-            };
+        cur_year = year.parse::<i32>()?;
+        updated_fields = true;
     }
+    
     if let Some(month) = data.month {
-        position.contracts[last_idx].open.date = match Utc
-            .with_ymd_and_hms(
-                cur_year,
-                month.parse::<u32>()?,
-                cur_day,
-                17,
-                0,
-                0,
-            )
-            {
-                chrono::LocalResult::Single(datetime) => datetime,
-                _ => return Err(Error::from("Invalid date provided")),
-            };
+        cur_month = month.parse::<u32>()?;
+        updated_fields = true;
     }
+    
     if let Some(day) = data.day {
+        cur_day = day.parse::<u32>()?;
+        updated_fields = true;
+    }
+
+    // Apply all changes at once if any fields were updated
+    if updated_fields {
         position.contracts[last_idx].open.date = match Utc.with_ymd_and_hms(
             cur_year,
             cur_month,
-            day.parse::<u32>()?,
+            cur_day,
             17,
             0,
             0,
@@ -112,6 +102,7 @@ pub async fn date(ctx: AppContext<'_>) -> Result<(), Error> {
             _ => return Err(Error::from("Invalid date provided")),
         };
     }
+    
     position_list_replace(&mut db, "positions", edit_id as usize, position);
 
     ctx.say("Position Updated").await?;

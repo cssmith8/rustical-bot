@@ -1,5 +1,6 @@
-use chrono::prelude::*;
+use chrono::{prelude::*, Datelike, Duration, NaiveDate};
 use crate::types::contract::Contract;
+use crate::types::positionmonth::PositionMonth;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Position {
@@ -89,8 +90,57 @@ impl Position {
         self.gain() / self.investment()
     }
 
-    pub fn investment_time(&self) -> f64 {
-        return self.investment() * self.time() as f64;
+    pub fn generate_profit_months(&self) -> Vec<PositionMonth> {
+        let startdate = &self.get_first_contract().open.date;
+        let enddate = if self.get_final_contract().close.is_some() {
+            &self.get_final_contract().close.as_ref().unwrap().date
+        } else {
+            &self.get_final_contract().expiry()
+        };
+
+        let mut current = startdate.naive_utc().date();
+        let enddate_naive_dt = enddate.naive_utc();
+        let enddate_naive = enddate_naive_dt.date();
+        let total_days = (enddate_naive - current).num_days() + 1;
+
+        let mut profit_months = Vec::new();
+
+        while current <= enddate_naive {
+            let year = current.year();
+            let month = current.month();
+            let month_start = NaiveDate::from_ymd_opt(year, month, 1).unwrap();
+            let next_month = if month == 12 {
+                NaiveDate::from_ymd_opt(year + 1, 1, 1).unwrap()
+            } else {
+                NaiveDate::from_ymd_opt(year, month + 1, 1).unwrap()
+            };
+            let month_end = (next_month - Duration::days(1)).min(enddate_naive);
+
+            let range_start = current.max(month_start);
+            let range_end = month_end.min(enddate_naive);
+            let days_in_month = (range_end - range_start).num_days() + 1;
+
+            let fraction = days_in_month as f64 / total_days as f64;
+
+            profit_months.push(PositionMonth {
+                year: year,
+                month: month,
+                position: self.clone(),
+                gain: &self.gain() * fraction,
+                investment: self.investment() * days_in_month as f64
+            });
+            if self.get_final_contract().expiry().year() == 2023 {
+                println!("{}", PositionMonth {
+                year: year,
+                month: month,
+                position: self.clone(),
+                gain: &self.gain() * fraction,
+                investment: self.investment() * days_in_month as f64
+            }.display());
+            }
+            current = next_month;
+        }
+        profit_months
     }
 
     pub fn display(&self) -> String {
