@@ -1,10 +1,10 @@
 //use csv::{Reader, StringRecord, Writer};
 use crate::types::types::{Context, Data, Error};
+use anyhow::Result;
 use pickledb::{PickleDb, PickleDbDumpPolicy, SerializationMethod};
 use poise::serenity_prelude as serenity;
 use serenity::model::id::ChannelId;
 use serenity::prelude::*;
-use anyhow::Result;
 use serenity::{
     //model::prelude::{Message, Ready},
     Client,
@@ -181,6 +181,7 @@ async fn main() -> Result<(), anyhow::Error> {
                 commands::options::query::stats::stats(),
                 commands::options::query::best::best(),
                 commands::options::query::month::month(),
+                commands::joke::joke(),
             ],
             event_handler: |ctx, event, framework, data| {
                 Box::pin(event_handler(ctx, event, framework, data))

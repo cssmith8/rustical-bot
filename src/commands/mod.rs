@@ -1,3 +1,4 @@
+pub mod joke;
 pub mod modal;
-pub mod stars;
 pub mod options;
+pub mod stars;
