@@ -3,8 +3,8 @@
 FROM rust:latest as builder
 
 # Create a new empty shell project
-RUN USER=root cargo new --bin gippitybot
-WORKDIR /gippitybot
+RUN USER=root cargo new --bin rustical
+WORKDIR /rustical
 
 # Copy over your manifests
 COPY ./Cargo.lock ./Cargo.lock
@@ -18,7 +18,7 @@ RUN rm src/*.rs
 COPY ./src ./src
 
 # Build for release
-RUN rm ./target/release/deps/gippitybot*
+RUN rm ./target/release/deps/rustical*
 RUN cargo build --release
 
 # Stage 2: Setup the runtime environment
@@ -28,8 +28,8 @@ FROM rust:latest
 RUN apt-get update && apt-get install -y ca-certificates libssl-dev && rm -rf /var/lib/apt/lists/*
 
 # Copy the build artifact from the build stage
-COPY --from=builder /gippitybot/target/release/gippitybot /usr/local/bin/gippitybot
+COPY --from=builder /rustical/target/release/rustical /usr/local/bin/rustical
 
 # Set the startup command to run your binary
-CMD ["gippitybot"]
+CMD ["rustical"]
 
