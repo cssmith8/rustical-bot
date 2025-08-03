@@ -182,6 +182,7 @@ async fn main() -> Result<(), anyhow::Error> {
                 commands::options::query::best::best(),
                 commands::options::query::month::month(),
                 commands::joke::joke(),
+                commands::remark::remark(),
             ],
             event_handler: |ctx, event, framework, data| {
                 Box::pin(event_handler(ctx, event, framework, data))
