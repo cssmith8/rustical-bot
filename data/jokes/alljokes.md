@@ -40,7 +40,7 @@ Don't apply logic\nWhen mixing new splash potions--\nThat's what Jeb will say!
 **What do you get when you cross a cat with a squid?**\n*Cat-amari*!
 **If there was a noational anthem for Minecraft, what would it be?**\n"I will survive!"
 **What does Taylor Swift sing when she plays Minecraft and eats potatoes?**\n"Taters gonna tate!"
-**How does Guy Fiere make the best pickles?**\nHe uses Herobrine!
+**How does Guy Fieri make the best pickles?**\nHe uses Herobrine!
 **Who was the guest of honor at the Brine family reunion?**\nHerobrine!
 **Who does Superman look up to?**\nHerobrine!
 Knock, knock\n**Who's there?**\nYou're a diamond?\n**You're a diamond who?**\nYou're a _diamond_ me crazy!

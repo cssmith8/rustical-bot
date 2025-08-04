@@ -62,7 +62,7 @@ NAAAAAA NANANA NANA NAA NAA NA\nKATAMARI DAMASHIIIIIIIII
 I'm sure glad one of us will, because I sure won't
 **What does Taylor Swift sing when she plays Minecraft and eats potatoes?**\n"Taters gonna tate!"
 Well that doesn't date this trash at all.\n...What am I saying? This book is already so dated, it thinks the Raj is a nice holiday destination.
-**How does Guy Fiere make the best pickles?**\nHe uses Herobrine!
+**How does Guy Fieri make the best pickles?**\nHe uses Herobrine!
 I feel like this joke might make me chortle if I had the slightest clue who Guy Fieri was
 Knock, knock\n**Who's there?**\nYou're a diamond?\n**You're a diamond who?**\nYou're a _diamond_ me crazy!
 Remember when you were young\nYou shone like the sun\nShiiiiiine on you craaaaaaaaazy diamond
