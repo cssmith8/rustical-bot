@@ -3,3 +3,4 @@ pub mod modal;
 pub mod options;
 pub mod remark;
 pub mod stars;
+pub mod translate;
