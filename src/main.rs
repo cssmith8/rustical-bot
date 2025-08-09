@@ -1,25 +1,15 @@
-//use csv::{Reader, StringRecord, Writer};
 use crate::types::types::{Context, Data, Error};
 use anyhow::Result;
 use pickledb::{PickleDb, PickleDbDumpPolicy, SerializationMethod};
 use poise::serenity_prelude as serenity;
-use serenity::model::id::ChannelId;
 use serenity::prelude::*;
-use serenity::{
-    //model::prelude::{Message, Ready},
-    Client,
-};
-
+use serenity::Client;
 use std::env;
 
+mod bot;
 mod commands;
 mod types;
 mod utils;
-
-#[derive(Debug, serde::Deserialize)]
-struct Record {
-    name: String,
-}
 
 #[poise::command(slash_command, prefix_command)]
 async fn age(
@@ -41,54 +31,6 @@ async fn say(
     Ok(())
 }
 
-//send a message in channel c
-async fn rustical_message(
-    ctx: &serenity::Context,
-    data: &Data,
-    c: ChannelId,
-    laptop: String,
-) -> Result<(), Error> {
-    let mut db = data.db.lock().await;
-
-    let index: i32 = db.get::<i32>("line").unwrap_or_default();
-    db.set("line", &(index + 1)).unwrap();
-
-    let mut rdr = csv::Reader::from_path("./data/cool.csv")?;
-    let mut results: Vec<Record> = vec![];
-    for result in rdr.deserialize::<Record>() {
-        // Notice that we need to provide a type hint for automatic
-        // deserialization.
-        match result {
-            Ok(rec) => results.push(rec),
-            Err(err) => {
-                println!("ERORR PARSING: {}", err.to_string())
-            }
-        }
-    }
-
-    let message = match results.get((index % (results.len() as i32)) as usize) {
-        Some(res) => res.name.clone(),
-        None => "Couldn't get one lol".to_string(),
-    };
-
-    let l: String = match laptop.parse().unwrap() {
-        1 => " Laptopically".to_string(),
-        _ => "".to_string(),
-    };
-
-    let channel = c;
-    let channel = channel
-        .to_channel(&ctx.http)
-        .await
-        .expect("this channel will always work");
-    if let Some(channel) = channel.guild() {
-        channel
-            .say(&ctx.http, message + &l + " :money_mouth:")
-            .await?;
-    }
-    Ok(())
-}
-
 async fn event_handler(
     ctx: &serenity::Context,
     event: &serenity::FullEvent,
@@ -97,50 +39,14 @@ async fn event_handler(
 ) -> Result<(), Error> {
     match event {
         serenity::FullEvent::Ready { data_about_bot, .. } => {
-            println!("Logged in as {}", data_about_bot.user.tag());
-
-            rustical_message(
-                ctx,
-                data,
-                ChannelId::new(1160065321013620857), //bot
-                //ChannelId::new(1120455140416172115), //genny
-                env::var("LAPTOP").expect("0"),
-            )
-            .await?;
-
-            // let db_location = "data/test.db";
-            // let mut db = match PickleDb::load(
-            //     db_location,
-            //     PickleDbDumpPolicy::AutoDump,
-            //     SerializationMethod::Json,
-            // ) {
-            //     Ok(db) => db,
-            //     Err(e) => {
-            //         //ctx.say("Could not load db").await?;
-            //         return Err(Error::from(e.to_string()));
-            //     }
-            // };
-            // // create a new list
-            // db.lcreate("list1")?;
-            // // add a bunch of numbers to the list
-            // db.lextend("list1", &vec![100, 200, 300]).unwrap();
-            // // get the list
-            // let item: i32 = db.lget("list1", db.llen("list1") - 1).unwrap();
-            // //println!("og item: {}", item);
+            bot::on_awake::on_awake(ctx, event, _framework, data, data_about_bot).await?;
         }
         // me when the
         serenity::FullEvent::Message { new_message } => {
-            if new_message.author.bot {
-                return Ok(());
-            }
-            //not case sensitive
-            if new_message.content.eq_ignore_ascii_case("rustical bot") {
-                rustical_message(ctx, data, new_message.channel_id, "0".to_string()).await?;
-            }
+            bot::on_message::on_message(ctx, event, _framework, data, new_message).await?;
         }
         _ => {}
     };
-
     Ok(())
 }
 
@@ -185,7 +91,6 @@ async fn main() -> Result<(), anyhow::Error> {
         .build();
 
     let mut client = Client::builder(token, intents)
-        //.event_handler(Handler {})
         .framework(framework)
         .await
         .expect("Could not create client");

@@ -7,9 +7,9 @@ pub async fn translate(ctx: AppContext<'_>) -> Result<(), Error> {
     let channel_id = ctx.channel_id();
 
     let builder = GetMessages::new().limit(3);
-    let _messages = channel_id.messages(ctx.http(), builder).await?;
+    let messages = channel_id.messages(ctx.http(), builder).await?;
 
-    for message in _messages.iter() {
+    for message in messages.iter() {
         println!("{}: {}", message.author.name, message.content);
     }
     Ok(())
