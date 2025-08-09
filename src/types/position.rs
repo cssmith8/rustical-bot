@@ -1,6 +1,6 @@
-use chrono::{prelude::*, Datelike, Duration, NaiveDate};
 use crate::types::contract::Contract;
 use crate::types::positionmonth::PositionMonth;
+use chrono::{prelude::*, Datelike, Duration, NaiveDate};
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Position {
@@ -8,7 +8,6 @@ pub struct Position {
 }
 
 impl Position {
-
     pub fn clone(&self) -> Position {
         Position {
             contracts: self.contracts.iter().map(|c| c.clone()).collect(),
@@ -22,7 +21,10 @@ impl Position {
     pub fn is_closed(&self) -> bool {
         let final_contract = self.get_final_contract();
         final_contract.close.is_some()
-            || matches!(final_contract.status().as_str(), "assigned" | "expired" | "rolled")
+            || matches!(
+                final_contract.status().as_str(),
+                "assigned" | "expired" | "rolled"
+            )
     }
 
     pub fn get_final_contract(&self) -> &Contract {
@@ -40,7 +42,14 @@ impl Position {
     }
 
     pub fn aggregate_premium(&self) -> f64 {
-        (self.contracts.iter().map(|c| c.aggregate_premium()).sum::<f64>() * 100.0).round() / 100.0
+        (self
+            .contracts
+            .iter()
+            .map(|c| c.aggregate_premium())
+            .sum::<f64>()
+            * 100.0)
+            .round()
+            / 100.0
     }
 
     pub fn get_ticker(&self) -> String {
@@ -127,7 +136,7 @@ impl Position {
                 month: month,
                 position: self.clone(),
                 gain: &self.gain() * fraction,
-                investment: self.investment() * days_in_month as f64
+                investment: self.investment() * days_in_month as f64,
             });
             current = next_month;
         }
@@ -145,7 +154,7 @@ impl Position {
         let mut current = startdate.naive_utc().date();
         let enddate_naive_dt = enddate.naive_utc();
         let enddate_naive = enddate_naive_dt.date();
-        let total_days = (enddate_naive - current).num_days() + 1;
+        //let total_days = (enddate_naive - current).num_days() + 1;
 
         let mut profit_months = Vec::new();
 
@@ -164,8 +173,8 @@ impl Position {
             let range_end = month_end.min(enddate_naive);
             let days_in_month = (range_end - range_start).num_days() + 1;
 
-            let fraction = days_in_month as f64 / total_days as f64;
-            
+            //let fraction = days_in_month as f64 / total_days as f64;
+
             let gain = if year == enddate_naive.year() && month == enddate_naive.month() {
                 self.gain()
             } else {
@@ -177,7 +186,7 @@ impl Position {
                 month: month,
                 position: self.clone(),
                 gain,
-                investment: self.investment() * days_in_month as f64
+                investment: self.investment() * days_in_month as f64,
             });
             current = next_month;
         }
