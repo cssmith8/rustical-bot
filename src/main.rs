@@ -6,8 +6,8 @@ use serenity::prelude::*;
 use serenity::Client;
 use std::env;
 
-mod bot;
 mod commands;
+mod events;
 mod types;
 mod utils;
 
@@ -39,11 +39,11 @@ async fn event_handler(
 ) -> Result<(), Error> {
     match event {
         serenity::FullEvent::Ready { data_about_bot, .. } => {
-            bot::on_awake::on_awake(ctx, event, _framework, data, data_about_bot).await?;
+            events::on_awake::on_awake(ctx, event, _framework, data, data_about_bot).await?;
         }
         // me when the
         serenity::FullEvent::Message { new_message } => {
-            bot::on_message::on_message(ctx, event, _framework, data, new_message).await?;
+            events::on_message::on_message(ctx, event, _framework, data, new_message).await?;
         }
         _ => {}
     };
