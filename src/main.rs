@@ -1,4 +1,4 @@
-use crate::types::types::{Context, Data, Error};
+use crate::types::types::{Data, Error};
 use anyhow::Result;
 use pickledb::{PickleDb, PickleDbDumpPolicy, SerializationMethod};
 use poise::serenity_prelude as serenity;
@@ -10,26 +10,6 @@ mod commands;
 mod events;
 mod types;
 mod utils;
-
-#[poise::command(slash_command, prefix_command)]
-async fn age(
-    ctx: Context<'_>,
-    #[description = "Selected user"] user: Option<serenity::User>,
-) -> Result<(), Error> {
-    let u = user.as_ref().unwrap_or_else(|| ctx.author());
-    let response = format!("{}'s account was created at {}", u.name, u.created_at());
-    ctx.say(response).await?;
-    Ok(())
-}
-
-#[poise::command(slash_command, prefix_command)]
-async fn say(
-    ctx: Context<'_>,
-    #[description = "Message to say"] message: String,
-) -> Result<(), Error> {
-    ctx.say(message).await?;
-    Ok(())
-}
 
 async fn event_handler(
     ctx: &serenity::Context,
@@ -68,8 +48,7 @@ async fn main() -> Result<(), anyhow::Error> {
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
             commands: vec![
-                age(),
-                say(),
+                commands::say::say(),
                 //commands::modal::modal(),
                 commands::joke::joke(),
                 commands::remark::remark(),
