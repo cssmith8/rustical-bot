@@ -1,6 +1,6 @@
 use crate::types::translation::Translation;
 use crate::types::types::{Data, Error};
-use crate::utils::translations::{load_translations, save_translation};
+use crate::utils::translations::save_translation;
 use anyhow::Result;
 use poise::serenity_prelude as serenity;
 use regex::Regex;
@@ -43,20 +43,11 @@ fn test_for_translation(input: &str) {
             definition: captures[2].to_string(),
         };
 
-        println!("Found translation: {:?}", translation);
-
         let abbreviation = translation.abbreviation.clone();
         let definition = translation.definition.clone();
 
         if let Err(e) = save_translation(translation) {
             eprintln!("Error saving translation: {}", e);
-        }
-
-        // print all translations in a loop
-        if let Ok(translations) = load_translations() {
-            for t in translations {
-                println!("DB Translation: {:?}", t);
-            }
         }
 
         test_for_translation(&abbreviation);

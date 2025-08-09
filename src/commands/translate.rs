@@ -2,7 +2,7 @@ use crate::types::types::{AppContext, Error};
 use crate::utils::translations::load_translations;
 use serenity::builder::GetMessages;
 
-const NUM_MESSAGES: u8 = 1;
+const NUM_MESSAGES: u8 = 3;
 
 #[poise::command(slash_command)]
 pub async fn translate(ctx: AppContext<'_>) -> Result<(), Error> {
