@@ -53,6 +53,7 @@ async fn main() -> Result<(), anyhow::Error> {
                 commands::joke::joke(),
                 commands::remark::remark(),
                 commands::translate::translate(),
+                commands::logs::logs(),
             ],
             event_handler: |ctx, event, framework, data| {
                 Box::pin(event_handler(ctx, event, framework, data))

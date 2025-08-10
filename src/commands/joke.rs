@@ -11,6 +11,7 @@ pub async fn joke(
 ) -> Result<(), Error> {
     // get a random joke from the file data/jokes/alljokes.md or a specific one by index
     let joke = get_joke(index)?;
+
     ctx.say(joke).await?;
     Ok(())
 }
