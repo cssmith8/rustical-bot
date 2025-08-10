@@ -43,14 +43,12 @@ fn test_for_translation(input: &str) {
             definition: captures[2].to_string(),
         };
 
-        let abbreviation = translation.abbreviation.clone();
         let definition = translation.definition.clone();
 
         if let Err(e) = save_translation(translation) {
             eprintln!("Error saving translation: {}", e);
         }
 
-        test_for_translation(&abbreviation);
         test_for_translation(&definition);
     }
 }
