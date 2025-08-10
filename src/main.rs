@@ -19,11 +19,11 @@ async fn event_handler(
 ) -> Result<(), Error> {
     match event {
         serenity::FullEvent::Ready { data_about_bot, .. } => {
-            events::on_awake::on_awake(ctx, event, _framework, data, data_about_bot).await?;
+            events::awake::awake(ctx, event, _framework, data, data_about_bot).await?;
         }
         // me when the
         serenity::FullEvent::Message { new_message } => {
-            events::on_message::on_message(ctx, event, _framework, data, new_message).await?;
+            events::message::message(ctx, event, _framework, data, new_message).await?;
         }
         _ => {}
     };

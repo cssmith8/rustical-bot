@@ -5,7 +5,7 @@ use serenity::model::id::ChannelId;
 
 use std::env;
 
-pub async fn on_awake(
+pub async fn awake(
     _ctx: &serenity::Context,
     _event: &serenity::FullEvent,
     _framework: poise::FrameworkContext<'_, Data, Error>,

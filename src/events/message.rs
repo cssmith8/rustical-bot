@@ -5,7 +5,7 @@ use anyhow::Result;
 use poise::serenity_prelude as serenity;
 use regex::Regex;
 
-pub async fn on_message(
+pub async fn message(
     _ctx: &serenity::Context,
     _event: &serenity::FullEvent,
     _framework: poise::FrameworkContext<'_, Data, Error>,

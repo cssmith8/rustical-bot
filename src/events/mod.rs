@@ -1,2 +1,2 @@
-pub mod on_awake;
-pub mod on_message;
+pub mod awake;
+pub mod message;
