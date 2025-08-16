@@ -4,6 +4,7 @@ use serenity::builder::GetMessages;
 
 const NUM_MESSAGES: u8 = 3;
 
+/// Translate recent messages in the channel
 #[poise::command(slash_command)]
 pub async fn translate(ctx: AppContext<'_>) -> Result<(), Error> {
     //print the 3 most recent messages in the channel to the console

@@ -1,6 +1,7 @@
 use crate::types::types::{Context, Error};
 use anyhow::Result;
 
+/// Make the bot say a message
 #[poise::command(slash_command, prefix_command)]
 pub async fn say(
     ctx: Context<'_>,

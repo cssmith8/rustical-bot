@@ -15,6 +15,7 @@ pub struct MyModal {
     second_input: Option<String>, // Option means optional input
 }
 
+/// Modal that does nothing
 #[poise::command(slash_command)]
 pub async fn modal(ctx: AppContext<'_>) -> Result<(), Error> {
     //get the user id

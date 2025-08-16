@@ -1,5 +1,6 @@
 use crate::types::types::{AppContext, Error};
 
+/// Output recent logs of bot activity
 #[poise::command(slash_command)]
 pub async fn logs(
     ctx: AppContext<'_>,

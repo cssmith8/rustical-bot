@@ -4,6 +4,7 @@ use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
 
+/// Get a joke from Jokes for Minecrafters
 #[poise::command(slash_command)]
 pub async fn joke(
     ctx: AppContext<'_>,
