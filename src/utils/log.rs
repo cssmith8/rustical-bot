@@ -1,11 +1,18 @@
-use crate::types::dblog::DBLog;
-use crate::types::types::Error;
-use crate::utils::db::create_or_open_db;
+use crate::{
+    types::{dblog::DBLog, types::Error},
+    utils::db::create_or_open_db,
+};
 use chrono::Utc;
+use poise::serenity_prelude::{self as serenity, Http};
+use serenity::model::id::ChannelId;
+use std::env;
 
 #[allow(dead_code)]
 pub fn log(message: String) -> Result<(), Error> {
-    let mut db = create_or_open_db("data/logs.db".to_string());
+    let mut db = create_or_open_db(format!(
+        "{}/logs.db",
+        env::var("DB_PATH").unwrap_or_else(|_| "data/".into())
+    ));
     if !db.lexists("logs") {
         db.lcreate("logs")?;
     }
@@ -13,11 +20,26 @@ pub fn log(message: String) -> Result<(), Error> {
         "logs",
         &DBLog {
             timestamp: Utc::now(),
-            message,
+            message: message.clone(),
         },
     )
     .ok_or_else(|| Error::from("Failed to add log to database"))?;
+    if db.get::<bool>("realtime").unwrap_or(false) {
+        send_realtime_log(&message);
+    }
+    println!("[Logged]: {}", message);
     Ok(())
+}
+
+fn send_realtime_log(message: &str) {
+    let channel = ChannelId::new(1160065321013620857);
+    let http = Http::new(&env::var("DISCORD_TOKEN").expect("DISCORD_TOKEN must be set"));
+
+    // Spawn a new Tokio task to send the message asynchronously
+    let message = message.to_string();
+    tokio::spawn(async move {
+        let _ = channel.say(&http, format!("[Log]: {}", message)).await;
+    });
 }
 
 pub fn load_all_logs() -> Result<Vec<DBLog>, Error> {

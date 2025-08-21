@@ -1,5 +1,6 @@
 use crate::types::translation::Translation;
 use crate::types::types::{Data, Error};
+use crate::utils::log::log;
 use crate::utils::translations::save_translation;
 use anyhow::Result;
 use poise::serenity_prelude as serenity;
@@ -27,28 +28,38 @@ pub async fn message(
         _ => {}
     }
 
-    test_for_translation(&content);
+    let _ = test_for_translation(&content);
 
     Ok(())
 }
 
-fn test_for_translation(input: &str) {
+fn test_for_translation(input: &str) -> Option<String> {
     // Use regex to check if the message has text, then more text in parentheses
-    let regex = Regex::new(r"(\w+)\s*\((.+)\)").unwrap();
+    let regex = Regex::new(r"^([^\(]+)\s*\((.+)\)").unwrap();
 
     if let Some(captures) = regex.captures(&input) {
         // Create a new Translation struct where the first text is the abbreviation and the second text is the definition
-        let translation = Translation {
-            abbreviation: captures[1].to_string(),
-            definition: captures[2].to_string(),
+        let mut translation = Translation {
+            abbreviation: captures[1].trim().to_string(),
+            definition: captures[2].trim().to_string(),
         };
 
-        let definition = translation.definition.clone();
+        if let Some(t) = test_for_translation(&translation.definition) {
+            translation.definition = t;
+        }
+
+        let abbreviation = translation.abbreviation.clone();
+
+        let _ = log(format!(
+            "Saving translation: {} -> {}",
+            abbreviation, translation.definition
+        ));
 
         if let Err(e) = save_translation(translation) {
             eprintln!("Error saving translation: {}", e);
         }
 
-        test_for_translation(&definition);
+        return Some(abbreviation);
     }
+    None
 }
