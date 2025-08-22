@@ -1,7 +1,7 @@
 use crate::types::translation::Translation;
 use crate::types::types::{Data, Error};
 use crate::utils::log::log;
-use crate::utils::translations::save_translation;
+use crate::utils::translations::{get_translation, save_translation};
 use anyhow::Result;
 use poise::serenity_prelude as serenity;
 use regex::Regex;
@@ -48,18 +48,28 @@ fn test_for_translation(input: &str) -> Option<String> {
             translation.definition = t;
         }
 
-        let abbreviation = translation.abbreviation.clone();
-
-        let _ = log(format!(
-            "Saving translation: {} -> {}",
-            abbreviation, translation.definition
-        ));
-
-        if let Err(e) = save_translation(translation) {
-            eprintln!("Error saving translation: {}", e);
+        match get_translation(&translation.definition) {
+            Ok(Some(_t)) => {
+                let _ = log(format!(
+                    "Translation already exists: {} -> {}",
+                    translation.abbreviation, translation.definition
+                ));
+            }
+            Ok(None) => {
+                let _ = log(format!(
+                    "Saving translation: {} -> {}",
+                    translation.abbreviation, translation.definition
+                ));
+                if let Err(e) = save_translation(&translation) {
+                    let _ = log(format!("Error saving translation: {}", e));
+                }
+            }
+            Err(e) => {
+                let _ = log(format!("Error getting translation: {}", e));
+            }
         }
 
-        return Some(abbreviation);
+        return Some(translation.abbreviation);
     }
     None
 }

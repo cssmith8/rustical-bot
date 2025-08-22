@@ -8,7 +8,7 @@ struct DBTranslation {
     d: String,
 }
 
-pub fn save_translation(translation: Translation) -> Result<(), Error> {
+pub fn save_translation(translation: &Translation) -> Result<(), Error> {
     let db_path = "data/translations.db".to_string();
     let mut db = create_or_open_db(db_path);
     if !db.lexists("translations") {
@@ -17,8 +17,8 @@ pub fn save_translation(translation: Translation) -> Result<(), Error> {
     db.ladd(
         "translations",
         &DBTranslation {
-            a: translation.abbreviation,
-            d: translation.definition,
+            a: translation.abbreviation.clone(),
+            d: translation.definition.clone(),
         },
     )
     .ok_or_else(|| Error::from("Failed to add translation to database"))?;
@@ -38,4 +38,14 @@ pub fn load_translations() -> Result<Vec<Translation>, Error> {
         });
     }
     Ok(all_translations)
+}
+
+pub fn get_translation(abbreviation: &String) -> Result<Option<Translation>, Error> {
+    let all = load_translations()?;
+    for translation in all {
+        if &translation.abbreviation == abbreviation {
+            return Ok(Some(translation));
+        }
+    }
+    Ok(None)
 }
