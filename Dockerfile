@@ -23,6 +23,7 @@ RUN cargo build --release
 
 # Stage 2: Setup the runtime environment
 FROM rust:latest
+WORKDIR /rustical
 
 # Install required packages
 RUN apt-get update && apt-get install -y ca-certificates libssl-dev && rm -rf /var/lib/apt/lists/*

@@ -48,7 +48,7 @@ fn test_for_translation(input: &str) -> Option<String> {
             translation.definition = t;
         }
 
-        match get_translation(&translation.definition) {
+        match get_translation(&translation.abbreviation) {
             Ok(Some(_t)) => {
                 let _ = log(format!(
                     "Translation already exists: {} -> {}",

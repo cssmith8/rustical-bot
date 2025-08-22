@@ -29,6 +29,10 @@ pub fn load_translations() -> Result<Vec<Translation>, Error> {
     let db_path = "data/translations.db".to_string();
     let db = create_or_open_db(db_path);
 
+    if !db.lexists("translations") {
+        return Ok(Vec::new());
+    }
+
     let mut all_translations: Vec<Translation> = Vec::new();
     for item_iter in db.liter("translations") {
         let db_translation = item_iter.get_item::<DBTranslation>().unwrap();

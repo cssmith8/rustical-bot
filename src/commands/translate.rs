@@ -1,5 +1,7 @@
+use crate::types::translation::Translation;
 use crate::types::types::{AppContext, Error};
 use crate::utils::translations::load_translations;
+use serenity::all::CreateAttachment;
 use serenity::builder::GetMessages;
 
 const NUM_MESSAGES: u8 = 3;
@@ -19,22 +21,53 @@ pub async fn translate(ctx: AppContext<'_>) -> Result<(), Error> {
     }
 
     if !all_translations.is_empty() {
-        let response = all_translations.join("\n");
-        ctx.say(response).await?;
+        if all_translations.len() > 50 {
+            let mut output = String::new();
+            for line in &all_translations {
+                output.push_str(&line.to_string());
+                output.push('\n');
+            }
+
+            let reply = poise::CreateReply::default().attachment(CreateAttachment::bytes(
+                output.as_bytes(),
+                "translations.txt",
+            ));
+            ctx.send(reply).await?;
+        } else {
+            let response = all_translations.join("\n");
+            ctx.say(response).await?;
+        }
     } else {
         ctx.say("No translations found.").await?;
     }
+
     Ok(())
 }
 
 fn test_for_translation(input: &str) -> Vec<String> {
-    let all_translations = load_translations().unwrap_or_default();
-    let mut found_translations = Vec::new();
-    for translation in all_translations {
-        if input.contains(&translation.abbreviation) {
-            found_translations
-                .push(translation.abbreviation.clone() + ": " + &translation.definition);
+    fn search(
+        all_translations: &Vec<Translation>,
+        input: &str,
+        found_translations: &mut Vec<String>,
+    ) {
+        for translation in all_translations {
+            if !input.contains(&translation.abbreviation) {
+                continue;
+            }
+            let entry = translation.abbreviation.clone() + ": " + &translation.definition;
+            if !found_translations.contains(&entry) {
+                found_translations.push(entry.clone());
+                search(
+                    all_translations,
+                    &translation.definition,
+                    found_translations,
+                );
+            }
         }
     }
+
+    let all = load_translations().unwrap_or_default();
+    let mut found_translations = Vec::new();
+    search(&all, input, &mut found_translations);
     found_translations
 }

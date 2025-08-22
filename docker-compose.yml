@@ -2,7 +2,11 @@ version: '3.8'
 
 services:
   rustical:
+    volumes:
+      - data:/rustical/data
     build: .
     env_file:
       - .env
 
+volumes:
+  data:
