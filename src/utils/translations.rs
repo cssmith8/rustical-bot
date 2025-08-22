@@ -1,5 +1,4 @@
-use crate::types::translation::Translation;
-use crate::types::types::Error;
+use crate::types::{translation::Translation, types::Error};
 use crate::utils::db::create_or_open_db;
 use anyhow::Result;
 
