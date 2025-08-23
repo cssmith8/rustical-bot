@@ -1,15 +1,16 @@
 use crate::types::types::{AppContext, Error};
+use crate::utils::log::load_all_logs;
 
 /// Output recent logs of bot activity
 #[poise::command(slash_command)]
 pub async fn logs(
     ctx: AppContext<'_>,
-    #[description = "Count"] count: Option<usize>,
+    #[description = "Count [1-50]"] count: Option<usize>,
 ) -> Result<(), Error> {
-    let logs = crate::utils::log::load_all_logs()?;
+    let logs = load_all_logs()?;
 
     let logs_to_return: Vec<_> = {
-        let count = count.unwrap_or(10);
+        let count = count.unwrap_or(10).clamp(1, 50);
         logs.into_iter()
             .rev()
             .take(count)

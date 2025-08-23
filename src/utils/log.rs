@@ -8,27 +8,32 @@ use serenity::model::id::ChannelId;
 use std::env;
 
 #[allow(dead_code)]
-pub fn log(message: String) -> Result<(), Error> {
+pub fn log(message: String) {
     let mut db = create_or_open_db(format!(
         "{}/logs.db",
         env::var("DB_PATH").unwrap_or_else(|_| "data/".into())
     ));
     if !db.lexists("logs") {
-        db.lcreate("logs")?;
+        if db.lcreate("logs").is_err() {
+            return;
+        }
     }
-    db.ladd(
-        "logs",
-        &DBLog {
-            timestamp: Utc::now(),
-            message: message.clone(),
-        },
-    )
-    .ok_or_else(|| Error::from("Failed to add log to database"))?;
+    if db
+        .ladd(
+            "logs",
+            &DBLog {
+                timestamp: Utc::now(),
+                message: message.clone(),
+            },
+        )
+        .is_none()
+    {
+        return;
+    }
     if db.get::<bool>("realtime").unwrap_or(false) {
         send_realtime_log(&message);
     }
-    println!("[Logged]: {}", message);
-    Ok(())
+    println!("[Log]: {}", message);
 }
 
 fn send_realtime_log(message: &str) {

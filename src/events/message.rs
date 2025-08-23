@@ -50,22 +50,22 @@ fn test_for_translation(input: &str) -> Option<String> {
 
         match get_translation(&translation.abbreviation) {
             Ok(Some(_t)) => {
-                let _ = log(format!(
+                log(format!(
                     "Translation already exists: {} -> {}",
                     translation.abbreviation, translation.definition
                 ));
             }
             Ok(None) => {
-                let _ = log(format!(
+                log(format!(
                     "Saving translation: {} -> {}",
                     translation.abbreviation, translation.definition
                 ));
                 if let Err(e) = save_translation(&translation) {
-                    let _ = log(format!("Error saving translation: {}", e));
+                    log(format!("Error saving translation: {}", e));
                 }
             }
             Err(e) => {
-                let _ = log(format!("Error getting translation: {}", e));
+                log(format!("Error getting translation: {}", e));
             }
         }
 
