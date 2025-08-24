@@ -1,4 +1,5 @@
-use crate::types::types::{Data, Error};
+use crate::events::handler::event_handler;
+use crate::types::types::Data;
 use anyhow::Result;
 use pickledb::{PickleDb, PickleDbDumpPolicy, SerializationMethod};
 use poise::serenity_prelude as serenity;
@@ -10,25 +11,6 @@ mod commands;
 mod events;
 mod types;
 mod utils;
-
-async fn event_handler(
-    ctx: &serenity::Context,
-    event: &serenity::FullEvent,
-    _framework: poise::FrameworkContext<'_, Data, Error>,
-    data: &Data,
-) -> Result<(), Error> {
-    match event {
-        serenity::FullEvent::Ready { data_about_bot, .. } => {
-            events::awake::awake(ctx, event, _framework, data, data_about_bot).await?;
-        }
-        // me when the
-        serenity::FullEvent::Message { new_message } => {
-            events::message::message(ctx, event, _framework, data, new_message).await?;
-        }
-        _ => {}
-    };
-    Ok(())
-}
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
@@ -49,7 +31,6 @@ async fn main() -> Result<(), anyhow::Error> {
         .options(poise::FrameworkOptions {
             commands: vec![
                 commands::say::say(),
-                //commands::modal::modal(),
                 commands::joke::joke(),
                 commands::remark::remark(),
                 commands::translate::translate(),
