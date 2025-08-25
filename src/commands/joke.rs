@@ -18,7 +18,7 @@ pub async fn joke(
 }
 
 fn get_joke(index: Option<usize>) -> Result<String, Error> {
-    let path = Path::new("jokes/alljokes.md");
+    let path = Path::new("static/jokes/alljokes.md");
     let file = File::open(path).map_err(|e| Error::from(e))?;
     let reader = io::BufReader::new(file);
 
