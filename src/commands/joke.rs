@@ -10,7 +10,7 @@ pub async fn joke(
     ctx: AppContext<'_>,
     #[description = "Joke number"] index: Option<usize>,
 ) -> Result<(), Error> {
-    // get a random joke from the file data/jokes/alljokes.md or a specific one by index
+    // get a random joke from the file jokes/alljokes.md or a specific one by index
     let joke = get_joke(index)?;
 
     ctx.say(joke).await?;
@@ -18,7 +18,7 @@ pub async fn joke(
 }
 
 fn get_joke(index: Option<usize>) -> Result<String, Error> {
-    let path = Path::new("data/jokes/alljokes.md");
+    let path = Path::new("jokes/alljokes.md");
     let file = File::open(path).map_err(|e| Error::from(e))?;
     let reader = io::BufReader::new(file);
 

@@ -1,7 +1,7 @@
 use crate::events::handler::event_handler;
 use crate::types::types::Data;
+use crate::utils::db::create_or_open_db;
 use anyhow::Result;
-use pickledb::{PickleDb, PickleDbDumpPolicy, SerializationMethod};
 use poise::serenity_prelude as serenity;
 use serenity::prelude::*;
 use serenity::Client;
@@ -17,11 +17,7 @@ async fn main() -> Result<(), anyhow::Error> {
     dotenv::dotenv().ok();
     let token = env::var("DISCORD_TOKEN").expect("Expected discord token env");
 
-    let db = PickleDb::load(
-        "data/real.db",
-        PickleDbDumpPolicy::AutoDump,
-        SerializationMethod::Json,
-    );
+    let db = create_or_open_db("data/real.db".to_string());
 
     let intents = GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::DIRECT_MESSAGES
@@ -45,9 +41,7 @@ async fn main() -> Result<(), anyhow::Error> {
         .setup(|ctx, _ready, framework| {
             Box::pin(async move {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
-                Ok(Data {
-                    db: Mutex::new(db?),
-                })
+                Ok(Data { db: Mutex::new(db) })
             })
         })
         .build();

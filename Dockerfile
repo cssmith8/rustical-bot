@@ -25,6 +25,8 @@ RUN cargo build --release
 FROM rust:latest
 WORKDIR /rustical
 
+COPY ./jokes ./jokes
+
 # Install required packages
 RUN apt-get update && apt-get install -y ca-certificates libssl-dev && rm -rf /var/lib/apt/lists/*
 
