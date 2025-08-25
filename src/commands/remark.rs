@@ -3,6 +3,7 @@ use rand::Rng;
 use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
+use crate::utils::env;
 
 /// Get a Joke for Minecrafters along with a snarky redditor remark
 #[poise::command(slash_command)]
@@ -16,7 +17,8 @@ pub async fn remark(
 }
 
 fn get_joke(index: Option<usize>) -> Result<String, Error> {
-    let path = Path::new("static/jokes/jokesandremarks.md");
+    let full_path = env::static_path() + "jokes/jokesandremarks.md";
+    let path = Path::new(&full_path);
     let file = File::open(path).map_err(|e| Error::from(e))?;
     let reader = io::BufReader::new(file);
 

@@ -1,6 +1,7 @@
 use crate::types::{translation::Translation, types::Error};
 use crate::utils::db::create_or_open_db;
 use anyhow::Result;
+use crate::utils::env;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 struct DBTranslation {
@@ -9,7 +10,7 @@ struct DBTranslation {
 }
 
 pub fn save_translation(translation: &Translation) -> Result<(), Error> {
-    let db_path = "data/translations.db".to_string();
+    let db_path = env::data_path() + "translations.db";
     let mut db = create_or_open_db(db_path);
     if !db.lexists("translations") {
         db.lcreate("translations")?;
@@ -26,7 +27,7 @@ pub fn save_translation(translation: &Translation) -> Result<(), Error> {
 }
 
 pub fn load_translations() -> Result<Vec<Translation>, Error> {
-    let db_path = "data/translations.db".to_string();
+    let db_path = env::data_path() + "translations.db";
     let db = create_or_open_db(db_path);
 
     if !db.lexists("translations") {
