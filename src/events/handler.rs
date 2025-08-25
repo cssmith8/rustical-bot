@@ -1,5 +1,10 @@
-use crate::events::{awake::awake, message::message};
-use crate::types::types::{Data, Error};
+use crate::{
+    events::{
+        awake::awake, 
+        message::message
+    },
+    types::types::{Data, Error}
+};
 use anyhow::Result;
 use poise::serenity_prelude as serenity;
 

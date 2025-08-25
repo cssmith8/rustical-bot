@@ -1,9 +1,13 @@
-use crate::types::types::{AppContext, Error};
+use crate::{
+    types::types::{AppContext, Error},
+    utils::env
+};
 use rand::Rng;
-use std::fs::File;
-use std::io::{self, BufRead};
-use std::path::Path;
-use crate::utils::env;
+use std::{
+    fs::File,
+    io::{self, BufRead},
+    path::Path
+};
 
 /// Get a Joke for Minecrafters along with a snarky redditor remark
 #[poise::command(slash_command)]

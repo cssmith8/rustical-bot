@@ -1,8 +1,10 @@
 use crate::{
     types::types::{AppContext, Error},
-    utils::db::create_or_open_db,
+    utils::{
+        db::create_or_open_db,
+        env
+    }
 };
-use crate::utils::env;
 
 /// Enable or disable realtime logging
 #[poise::command(slash_command)]

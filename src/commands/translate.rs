@@ -1,8 +1,14 @@
-use crate::types::translation::Translation;
-use crate::types::types::{AppContext, Error};
-use crate::utils::translations::load_translations;
-use serenity::all::CreateAttachment;
-use serenity::builder::GetMessages;
+use crate::{
+    types::{
+        translation::Translation,
+        types::{AppContext, Error}
+    },
+    utils::translations::load_translations
+};
+use serenity::{
+    all::CreateAttachment,
+    builder::GetMessages
+};
 
 const NUM_MESSAGES: u8 = 3;
 

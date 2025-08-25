@@ -1,7 +1,13 @@
-use crate::types::translation::Translation;
-use crate::types::types::{Data, Error};
-use crate::utils::log::log;
-use crate::utils::translations::{get_translation, save_translation};
+use crate::{
+    types::{
+        translation::Translation,
+        types::{Data, Error}
+    },
+    utils::{
+        log::log,
+        translations::{get_translation, save_translation}
+    }
+};
 use anyhow::Result;
 use poise::serenity_prelude as serenity;
 use regex::Regex;

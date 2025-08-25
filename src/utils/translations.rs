@@ -1,7 +1,14 @@
-use crate::types::{translation::Translation, types::Error};
-use crate::utils::db::create_or_open_db;
+use crate::{
+    types::{
+        translation::Translation, 
+        types::Error
+    },
+    utils::{
+        db::create_or_open_db,
+        env
+    }
+};
 use anyhow::Result;
-use crate::utils::env;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 struct DBTranslation {

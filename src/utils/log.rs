@@ -1,17 +1,20 @@
 use crate::{
-    types::{dblog::DBLog, types::Error},
+    types::{
+        dblog::DBLog, 
+        types::Error
+    },
     utils::db::create_or_open_db,
 };
 use chrono::Utc;
 use poise::serenity_prelude::{self as serenity, Http};
 use serenity::model::id::ChannelId;
-use std::env;
+use crate::utils::env;
 
 #[allow(dead_code)]
 pub fn log(message: String) {
     let mut db = create_or_open_db(format!(
         "{}/logs.db",
-        env::var("DB_PATH").unwrap_or_else(|_| "data/".into())
+        env::data_path()
     ));
     if !db.lexists("logs") {
         if db.lcreate("logs").is_err() {
@@ -38,7 +41,7 @@ pub fn log(message: String) {
 
 fn send_realtime_log(message: &str) {
     let channel = ChannelId::new(1160065321013620857);
-    let http = Http::new(&env::var("DISCORD_TOKEN").expect("DISCORD_TOKEN must be set"));
+    let http = Http::new(&env::discord_token());
 
     // Spawn a new Tokio task to send the message asynchronously
     let message = message.to_string();

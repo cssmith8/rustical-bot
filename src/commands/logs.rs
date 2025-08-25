@@ -1,5 +1,7 @@
-use crate::types::types::{AppContext, Error};
-use crate::utils::log::load_all_logs;
+use crate::{
+    types::types::{AppContext, Error},
+    utils::log::load_all_logs
+};
 
 /// Output recent logs of bot activity
 #[poise::command(slash_command)]
