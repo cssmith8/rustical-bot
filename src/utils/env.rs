@@ -1,5 +1,10 @@
 pub fn discord_token() -> String {
-    std::env::var("DISCORD_TOKEN").unwrap_or_else(|_| "default_token".into())
+    let bot_name = std::env::var("BOT").expect("BOT environment variable not set");
+    match bot_name.to_lowercase().as_str() {
+        "rustical" => std::env::var("RUSTICAL").unwrap_or_else(|_| "default_token".into()),
+        "moneymouth" => std::env::var("MONEYMOUTH").unwrap_or_else(|_| "default_token".into()),
+        _ => {panic!("Unknown bot specified in .env")},
+    }
 }
 
 pub fn data_path() -> String {
