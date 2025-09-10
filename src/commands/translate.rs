@@ -1,14 +1,11 @@
 use crate::{
     types::{
         translation::Translation,
-        types::{AppContext, Error}
+        types::{AppContext, Error},
     },
-    utils::translations::load_translations
+    utils::translations::load_translations,
 };
-use serenity::{
-    all::CreateAttachment,
-    builder::GetMessages
-};
+use serenity::{all::CreateAttachment, builder::GetMessages};
 
 const NUM_MESSAGES: u8 = 3;
 
@@ -23,7 +20,11 @@ pub async fn translate(ctx: AppContext<'_>) -> Result<(), Error> {
 
     let mut all_translations = Vec::new();
     for message in messages.iter() {
-        all_translations.extend(test_for_translation(&message.content));
+        for translation in test_for_translation(&message.content) {
+            if !all_translations.contains(&translation) {
+                all_translations.push(translation);
+            }
+        }
     }
 
     if !all_translations.is_empty() {
