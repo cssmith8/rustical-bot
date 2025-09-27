@@ -8,6 +8,6 @@ pub struct DBLog {
 
 impl DBLog {
     pub fn display(&self) -> String {
-        format!("[{}]: {}", self.timestamp, self.message)
+        format!("[<t:{}:f>] {}", self.timestamp.timestamp(), self.message)
     }
 }

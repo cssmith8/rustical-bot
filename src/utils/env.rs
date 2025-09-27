@@ -3,7 +3,10 @@ pub fn discord_token() -> String {
     match bot_name.to_lowercase().as_str() {
         "rustical" => std::env::var("RUSTICAL").unwrap_or_else(|_| "default_token".into()),
         "moneymouth" => std::env::var("MONEYMOUTH").unwrap_or_else(|_| "default_token".into()),
-        _ => {panic!("Unknown bot specified in .env")},
+        "fretter" => std::env::var("FRETTER").unwrap_or_else(|_| "default_token".into()),
+        _ => {
+            panic!("Unknown bot specified in .env")
+        }
     }
 }
 
