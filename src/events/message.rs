@@ -1,12 +1,13 @@
 use crate::{
     types::{
         translation::Translation,
-        types::{Data, Error}
+        types::{Data, Error},
     },
     utils::{
+        bot::send_message_in_channel,
         log::log,
-        translations::{get_translation, save_translation}
-    }
+        translations::{get_translation, save_translation},
+    },
 };
 use anyhow::Result;
 use poise::serenity_prelude as serenity;
@@ -35,6 +36,8 @@ pub async fn message(
     }
 
     let _ = test_for_translation(&content);
+
+    handle_echo(&content);
 
     Ok(())
 }
@@ -78,4 +81,17 @@ fn test_for_translation(input: &str) -> Option<String> {
         return Some(translation.abbreviation);
     }
     None
+}
+
+fn handle_echo(input: &str) {
+    let echo_regex = Regex::new(r#"^echo ?['"](.+)['"] ?>> ?['"]?<\#(\d+)>['"]?$"#).unwrap();
+    if let Some(captures) = echo_regex.captures(input) {
+        let message = captures.get(1).map_or("", |m| m.as_str());
+        let channel_id = captures
+            .get(2)
+            .map_or("", |m| m.as_str())
+            .parse::<u64>()
+            .unwrap_or(0);
+        send_message_in_channel(message, channel_id);
+    }
 }
