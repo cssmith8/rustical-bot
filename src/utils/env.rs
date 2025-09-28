@@ -21,3 +21,7 @@ pub fn static_path() -> String {
 pub fn laptop() -> String {
     std::env::var("LAPTOP").unwrap_or_else(|_| "0".into())
 }
+
+pub fn clear_password() -> String {
+    std::env::var("CLEAR_PASSWORD").unwrap_or_else(|_| "default_clear_password".into())
+}

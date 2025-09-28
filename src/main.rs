@@ -32,6 +32,7 @@ async fn main() -> Result<(), anyhow::Error> {
                 commands::translate::translate(),
                 commands::logs::logs(),
                 commands::realtime::realtime(),
+                commands::clear::clear(),
             ],
             event_handler: |ctx, event, framework, data| {
                 Box::pin(event_handler(ctx, event, framework, data))
@@ -41,7 +42,9 @@ async fn main() -> Result<(), anyhow::Error> {
         .setup(|ctx, _ready, framework| {
             Box::pin(async move {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
-                Ok(Data { _db: Mutex::new(db) })
+                Ok(Data {
+                    _db: Mutex::new(db),
+                })
             })
         })
         .build();

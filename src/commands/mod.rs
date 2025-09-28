@@ -1,3 +1,4 @@
+pub mod clear;
 pub mod joke;
 pub mod logs;
 pub mod realtime;
