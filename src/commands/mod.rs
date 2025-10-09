@@ -4,5 +4,6 @@ pub mod logs;
 pub mod realtime;
 pub mod remark;
 pub mod say;
+pub mod stratagem;
 pub mod translate;
 pub mod translate_list;

@@ -26,13 +26,14 @@ async fn main() -> Result<(), anyhow::Error> {
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
             commands: vec![
-                commands::say::say(),
-                commands::joke::joke(),
-                commands::remark::remark(),
-                commands::translate::translate(),
-                commands::logs::logs(),
-                commands::realtime::realtime(),
+                // commands::say::say(),
+                // commands::joke::joke(),
+                // commands::remark::remark(),
+                // commands::translate::translate(),
+                // commands::logs::logs(),
+                // commands::realtime::realtime(),
                 commands::clear::clear(),
+                commands::stratagem::stratagem()
             ],
             event_handler: |ctx, event, framework, data| {
                 Box::pin(event_handler(ctx, event, framework, data))
