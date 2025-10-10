@@ -1,11 +1,10 @@
 use crate::{
     types::types::{Data, Error},
-    utils::env
+    utils::env,
 };
 use anyhow::Result;
 use poise::serenity_prelude as serenity;
 use serenity::model::id::ChannelId;
-
 
 pub async fn awake(
     _ctx: &serenity::Context,
@@ -15,7 +14,7 @@ pub async fn awake(
     data_about_bot: &serenity::Ready,
 ) -> Result<(), Error> {
     println!("Logged in as {}", data_about_bot.user.tag());
-
+    /*
     rustical_message(
         _ctx,
         ChannelId::new(1160065321013620857), //bot
@@ -23,6 +22,7 @@ pub async fn awake(
         env::laptop(),
     )
     .await?;
+    */
 
     Ok(())
 }
@@ -32,7 +32,6 @@ async fn rustical_message(
     c: ChannelId,
     laptop: String,
 ) -> Result<(), Error> {
-
     let message = "Ruststicks";
 
     let l: String = match laptop.parse().unwrap() {
@@ -47,9 +46,7 @@ async fn rustical_message(
         .await
         .expect("this channel will always work");
     if let Some(channel) = channel.guild() {
-        channel
-            .say(&ctx.http, message.to_string() + &l)
-            .await?;
+        channel.say(&ctx.http, message.to_string() + &l).await?;
     }
     Ok(())
 }

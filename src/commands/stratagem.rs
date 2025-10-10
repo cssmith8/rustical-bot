@@ -1,13 +1,11 @@
 use crate::{
-    types::{
-        types::{AppContext, Error},
-    },
+    types::types::{AppContext, Error},
     utils::db::create_or_open_db,
-    utils::env
+    utils::env,
 };
 use poise::serenity_prelude::{self as serenity};
 
-/// View open options contracts
+/// Real gifs
 #[poise::command(slash_command)]
 pub async fn stratagem(ctx: AppContext<'_>) -> Result<(), Error> {
     let userid = ctx.interaction.user.id;
@@ -45,21 +43,18 @@ async fn view_open(ctx: AppContext<'_>) -> Result<(), serenity::Error> {
     let right_button_id = format!("{}right", ctx_id);
 
     // Send the embed with the first page as content
-    let reply =
-        {
-            let components = serenity::CreateActionRow::Buttons(vec![
-                serenity::CreateButton::new(&left_button_id).emoji('◀'),
-                serenity::CreateButton::new(&up_button_id).label("up"),
-                serenity::CreateButton::new(&down_button_id).label("down"),
-                serenity::CreateButton::new(&right_button_id).emoji('▶'),
-            ]);
+    let reply = {
+        let components = serenity::CreateActionRow::Buttons(vec![
+            serenity::CreateButton::new(&left_button_id).emoji('◀'),
+            serenity::CreateButton::new(&up_button_id).label("up"),
+            serenity::CreateButton::new(&down_button_id).label("down"),
+            serenity::CreateButton::new(&right_button_id).emoji('▶'),
+        ]);
 
-            poise::CreateReply::default()
-                .embed(serenity::CreateEmbed::default().description(
-                    "Awaiting input..."
-                ))
-                .components(vec![components])
-        };
+        poise::CreateReply::default()
+            .embed(serenity::CreateEmbed::default().description("Awaiting input..."))
+            .components(vec![components])
+    };
 
     ctx.send(reply).await?;
 
@@ -77,7 +72,7 @@ async fn view_open(ctx: AppContext<'_>) -> Result<(), serenity::Error> {
             ctx.say("Cannot use another user's input").await?;
             continue;
         }
-        
+
         if press.data.custom_id == left_button_id {
             current_path += "a";
         } else if press.data.custom_id == right_button_id {
@@ -111,9 +106,8 @@ async fn view_open(ctx: AppContext<'_>) -> Result<(), serenity::Error> {
                 ctx.serenity_context(),
                 serenity::CreateInteractionResponse::UpdateMessage(
                     serenity::CreateInteractionResponseMessage::new().embed(
-                        serenity::CreateEmbed::new().description(
-                            format!("current input: {}", current_path)
-                        ),
+                        serenity::CreateEmbed::new()
+                            .description(format!("current input: {}", current_path)),
                     ),
                 ),
             )
