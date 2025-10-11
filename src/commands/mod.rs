@@ -5,3 +5,4 @@ pub mod realtime;
 pub mod remark;
 pub mod say;
 pub mod translate;
+pub mod translate_list;
