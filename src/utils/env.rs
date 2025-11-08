@@ -25,3 +25,5 @@ pub fn laptop() -> String {
 pub fn clear_password() -> String {
     std::env::var("CLEAR_PASSWORD").unwrap_or_else(|_| "default_clear_password".into())
 }
+
+//new env function

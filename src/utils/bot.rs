@@ -12,3 +12,5 @@ pub fn send_message_in_channel(message: &str, channel_id: u64) {
         let _ = channel.say(&http, format!("{}", message)).await;
     });
 }
+
+//new functionality here
