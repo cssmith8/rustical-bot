@@ -14,3 +14,5 @@ pub fn send_message_in_channel(message: &str, channel_id: u64) {
 }
 
 //new functionality here
+
+//new comment
